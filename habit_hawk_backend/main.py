@@ -1,3 +1,5 @@
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.middleware.sessions import SessionMiddleware
@@ -6,12 +8,24 @@ from config import settings
 from database.connection import init_db
 from auth.routes import router as auth_router
 
+
+@asynccontextmanager
+async def lifespan(_app: FastAPI):
+    """Handle startup and shutdown events."""
+    # Startup: Initialize database (development only)
+    # For production, use Alembic migrations instead
+    init_db()
+    yield
+    # Shutdown: cleanup code would go here if needed
+
+
 # Create FastAPI app
 app = FastAPI(
     title=settings.app_name,
     description="Habit Hawk API for tracking streaks and habits.",
     version="1.0.0",
     debug=settings.debug,
+    lifespan=lifespan,
 )
 
 # Add session middleware (required for OAuth)
@@ -31,13 +45,6 @@ app.add_middleware(
 
 # Register routers
 app.include_router(auth_router)
-
-
-@app.on_event("startup")
-async def startup_event():
-    """Initialize database on startup (development only)."""
-    # For production, use Alembic migrations instead
-    init_db()
 
 
 @app.get("/")
