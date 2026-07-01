@@ -18,6 +18,10 @@ const getApiUrl = (): string => {
 
 export const API_BASE_URL = getApiUrl();
 
+// Log the API URL on initialization
+console.log('[API] Base URL configured as:', API_BASE_URL);
+console.log('[API] Platform:', typeof navigator !== "undefined" ? navigator.userAgent : 'Node.js/Server');
+
 /**
  * Custom error class for API errors
  */
@@ -42,6 +46,10 @@ export async function apiFetch<T>(
 ): Promise<T> {
   const url = `${API_BASE_URL}${endpoint}`;
 
+  // Debug logging
+  console.log(`[API] ${options.method || 'GET'} ${url}`);
+  console.log('[API] Request body:', options.body);
+
   try {
     const response = await fetch(url, {
       ...options,
@@ -51,8 +59,12 @@ export async function apiFetch<T>(
       },
     });
 
+    console.log(`[API] Response status: ${response.status}`);
+    console.log(`[API] Response headers:`, response.headers);
+
     // Parse response body
     const data = await response.json();
+    console.log('[API] Response data:', data);
 
     // Check if request was successful
     if (!response.ok) {
@@ -64,6 +76,8 @@ export async function apiFetch<T>(
 
     return data as T;
   } catch (error) {
+    console.error('[API] Fetch error:', error);
+
     // If it's already an ApiError, rethrow it
     if (error instanceof ApiError) {
       throw error;
@@ -71,6 +85,9 @@ export async function apiFetch<T>(
 
     // Network or parsing errors
     if (error instanceof Error) {
+      console.error('[API] Error name:', error.name);
+      console.error('[API] Error message:', error.message);
+      console.error('[API] Error stack:', error.stack);
       throw new ApiError(0, `Network error: ${error.message}`);
     }
 

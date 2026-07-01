@@ -13,17 +13,17 @@ def create_test_user():
     db = SessionLocal()
     try:
         # Check if test user already exists
-        existing_user = db.query(User).filter(User.username == "testuser").first()
+        existing_user = db.query(User).filter(User.username == "abernabel").first()
         if existing_user:
-            print("[INFO] Test user 'testuser' already exists!")
-            print(f"   Username: testuser")
+            print("[INFO] Test user 'abernabel' already exists!")
+            print(f"   Username: abernabel")
             print(f"   Password: password123")
             print(f"   User ID: {existing_user.user_id}")
             return
 
         # Create test user
         test_user = User(
-            username="testuser",
+            username="abernabel",
             password_hash=get_password_hash("password123"),
             timezone="America/New_York",
         )
@@ -33,7 +33,7 @@ def create_test_user():
         db.refresh(test_user)
 
         print("[SUCCESS] Test user created successfully!")
-        print(f"   Username: testuser")
+        print(f"   Username: abernabel")
         print(f"   Password: password123")
         print(f"   User ID: {test_user.user_id}")
 

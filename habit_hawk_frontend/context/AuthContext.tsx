@@ -73,6 +73,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
       setIsLoading(true);
       setError(null);
 
+      console.log("Attempting login for user:", username);
+
       // Call login service
       await AuthServices.login(username, password);
 

@@ -1,10 +1,29 @@
 import React from "react";
 
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from "react-native";
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert } from "react-native";
 import { Stack, router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
+import { useAuth } from "@/hooks/useAuth";
 
 export default function Settings() {
+  const { logout, user } = useAuth();
+
+  const handleLogout = () => {
+    Alert.alert(
+      "Log Out",
+      "Are you sure you want to log out?",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Log Out",
+          style: "destructive",
+          onPress: async () => {
+            await logout();
+          },
+        },
+      ]
+    );
+  };
   const settingsSections = [
     {
       title: "Account",
@@ -71,10 +90,16 @@ export default function Settings() {
             </View>
           ))}
 
-          <TouchableOpacity style={styles.logoutButton}>
+          <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
             <Ionicons name="log-out-outline" size={24} color="#FF3B30" />
             <Text style={styles.logoutText}>Log Out</Text>
           </TouchableOpacity>
+
+          {user && (
+            <Text style={styles.userInfo}>
+              Logged in as: {user.username}
+            </Text>
+          )}
 
           <Text style={styles.version}>Version 1.0.0</Text>
         </View>
@@ -144,6 +169,12 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: "#FF3B30",
     marginLeft: 8,
+  },
+  userInfo: {
+    textAlign: "center",
+    fontSize: 14,
+    color: "#666",
+    marginTop: 16,
   },
   version: {
     textAlign: "center",

@@ -18,13 +18,16 @@ class Settings(BaseSettings):
     jwt_algorithm: str = "HS256"
     jwt_expiration_minutes: int = 10080
 
-    # CORS
-    cors_origins: list[str] = [
-        "http://localhost:3000",
-        "http://localhost:5173",
-        "http://localhost:8081",  # Expo default
-        "exp://localhost:8081",   # Expo scheme
-    ]
+    # CORS - Allow all localhost origins for development
+    cors_origins: list[str] = ["*"]  # Allow all origins in dev
+    # For production, restrict to specific origins:
+    # cors_origins: list[str] = [
+    #     "http://localhost:3000",
+    #     "http://localhost:5173",
+    #     "http://localhost:8081",  # Expo default
+    #     "exp://localhost:8081",   # Expo scheme
+    #     "https://yourdomain.com",
+    # ]
 
     model_config = SettingsConfigDict(
         env_file=".env",
