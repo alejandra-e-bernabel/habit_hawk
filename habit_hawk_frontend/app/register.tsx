@@ -1,19 +1,70 @@
 import React, { useState } from "react";
-import { View, Text, TextInput, TouchableOpacity, StyleSheet } from "react-native";
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  StyleSheet,
+  ActivityIndicator,
+} from "react-native";
 import { Link } from "expo-router";
+import { useAuth } from "@/hooks/useAuth";
+import { ApiError } from "@/services/api";
 
 export default function Register() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [formError, setFormError] = useState<string | null>(null);
 
-  const handleRegister = () => {
-    // TODO: Implement registration logic
-    if (password !== confirmPassword) {
-      console.log("Passwords don't match");
+  const { register, isLoading, clearError } = useAuth();
+
+  const handleRegister = async () => {
+    const trimmedUsername = username.trim();
+
+    // Remove any previous message before validating again.
+    setFormError(null);
+    clearError();
+
+    if (!trimmedUsername || !password || !confirmPassword) {
+      setFormError("Please complete all fields.");
       return;
     }
-    console.log("Register attempt:", username);
+
+    if (trimmedUsername.length < 3) {
+      setFormError("Username must be at least 3 characters long.");
+      return;
+    }
+
+    if (password.length < 6) {
+      setFormError("Password must be at least 6 characters long.");
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      setFormError("The passwords do not match.");
+      return;
+    }
+
+    try {
+      await register(trimmedUsername, password);
+    } catch (error) {
+      if (error instanceof ApiError) {
+        setFormError(error.detail);
+      } else if (error instanceof Error) {
+        setFormError(error.message);
+      } else {
+        setFormError(
+          "Unable to create your account. Please try again."
+        );
+      }
+    }
+  };
+
+  const clearFormError = () => {
+    if (formError) {
+      setFormError(null);
+    }
   };
 
   return (
@@ -25,33 +76,66 @@ export default function Register() {
         style={styles.input}
         placeholder="Username"
         value={username}
-        onChangeText={setUsername}
+        onChangeText={(value) => {
+          setUsername(value);
+          clearFormError();
+        }}
         autoCapitalize="none"
+        autoCorrect={false}
+        editable={!isLoading}
       />
 
       <TextInput
         style={styles.input}
         placeholder="Password"
         value={password}
-        onChangeText={setPassword}
+        onChangeText={(value) => {
+          setPassword(value);
+          clearFormError();
+        }}
         secureTextEntry
+        editable={!isLoading}
       />
 
       <TextInput
         style={styles.input}
         placeholder="Confirm Password"
         value={confirmPassword}
-        onChangeText={setConfirmPassword}
+        onChangeText={(value) => {
+          setConfirmPassword(value);
+          clearFormError();
+        }}
         secureTextEntry
+        editable={!isLoading}
       />
 
-      <TouchableOpacity style={styles.button} onPress={handleRegister}>
-        <Text style={styles.buttonText}>Register</Text>
+      {formError ? (
+        <Text style={styles.errorText}>{formError}</Text>
+      ) : null}
+
+      <TouchableOpacity
+        style={[
+          styles.button,
+          isLoading && styles.buttonDisabled,
+        ]}
+        onPress={handleRegister}
+        disabled={isLoading}
+      >
+        {isLoading ? (
+          <ActivityIndicator color="#fff" />
+        ) : (
+          <Text style={styles.buttonText}>Register</Text>
+        )}
       </TouchableOpacity>
 
       <Link href="/login" asChild>
-        <TouchableOpacity style={styles.linkButton}>
-          <Text style={styles.linkText}>Already have an account? Login</Text>
+        <TouchableOpacity
+          style={styles.linkButton}
+          disabled={isLoading}
+        >
+          <Text style={styles.linkText}>
+            Already have an account? Login
+          </Text>
         </TouchableOpacity>
       </Link>
     </View>
@@ -87,6 +171,13 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     backgroundColor: "#fff",
   },
+  errorText: {
+    width: "100%",
+    color: "#B00020",
+    fontSize: 14,
+    marginBottom: 8,
+    textAlign: "center",
+  },
   button: {
     width: "100%",
     height: 50,
@@ -95,6 +186,9 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     marginTop: 8,
+  },
+  buttonDisabled: {
+    opacity: 0.6,
   },
   buttonText: {
     color: "#fff",

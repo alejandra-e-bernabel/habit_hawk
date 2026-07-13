@@ -4,7 +4,12 @@
 
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { apiFetch, ApiError } from "./api";
-import type { LoginRequest, TokenResponse, UserResponse } from "@/types/auth";
+import type {
+  LoginRequest,
+  RegisterRequest,
+  TokenResponse,
+  UserResponse,
+} from "@/types/auth";
 
 const TOKEN_KEY = "@habit_hawk_token";
 
@@ -28,7 +33,28 @@ export async function login(
 
   return response;
 }
+/**
+ * Register a new user.
+ * Stores the ruetend access token on success.
+ */
+export async function register(
+  username: string,
+  password: string
+): Promise<TokenResponse> {
+  const registration: RegisterRequest = {
+    username,
+    password,
+  };
 
+  const response = await apiFetch<TokenResponse>("/auth/register", {
+    method: "POST",
+    body: JSON.stringify(registration),
+  });
+
+  await AsyncStorage.setItem(TOKEN_KEY, response.access_token);
+
+  return response;
+}
 /**
  * Get current user information using stored token
  * Requires valid JWT token
