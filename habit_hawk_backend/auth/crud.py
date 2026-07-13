@@ -35,6 +35,25 @@ def get_user_by_username(db: Session, username: str) -> Optional[User]:
     """Fetch a user by username."""
     return db.query(User).filter(User.username == username).first()
 
+def create_user(
+    db: Session,
+    username: str,
+    password: str,
+    timezone_name: str = "America/New_York",
+) -> User:
+    """Create and persist a new user with a hased password"""
+    user = User(
+        username=username,
+        password_hash=get_password_hash(password),
+        timezone=timezone_name,
+    )
+
+    db.add(user)
+    db.commit()
+    db.refresh(user)
+
+    return user
+
 
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -> str:
     """Create a JWT access token."""
