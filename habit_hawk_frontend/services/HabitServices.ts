@@ -161,6 +161,20 @@ export async function deleteHabitLog(
 }
 
 /**
+ * Get all habits for the user
+ */
+export async function getAllHabits(): Promise<HabitResponse[]> {
+  const token = await getToken();
+
+  return await apiFetch<HabitResponse[]>("/habits", {
+    method: "GET",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+}
+
+/**
  * Get today's habits with completion status
  */
 export async function getTodaysHabits(): Promise<TodayHabitsResponse> {
