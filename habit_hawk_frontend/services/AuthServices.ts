@@ -35,7 +35,7 @@ export async function login(
 }
 /**
  * Register a new user.
- * Stores the ruetend access token on success.
+ * Stores the returned access token on success.
  */
 export async function register(
   username: string,
