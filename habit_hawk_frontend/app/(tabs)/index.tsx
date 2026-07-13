@@ -1,25 +1,35 @@
 import React from "react";
-
-import { View, Text, StyleSheet, ScrollView } from "react-native";
+import { View, StyleSheet, ScrollView, TouchableOpacity } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
+import TodayGoals from "@/componnets/home/TodayGoals";
+import LeaderboardPreview from "@/componnets/home/LeaderboardPreview";
+import MyGoalsPreview from "@/componnets/home/MyGoalsPreview";
 
 export default function Home() {
+  const router = useRouter();
+
   return (
-    <ScrollView style={styles.container}>
-      <View style={styles.content}>
-        <Text style={styles.title}>Welcome to Habit Hawk</Text>
-        <Text style={styles.subtitle}>Track your habits, compete with friends</Text>
+    <View style={styles.container}>
+      {/* <View style={styles.header}>
+        <TouchableOpacity
+          style={styles.settingsButton}
+          onPress={() => router.push("/settings")}
+        >
+          <Ionicons name="settings-outline" size={24} color="#fff" />
+        </TouchableOpacity>
+      </View> */}
 
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Today&apos;s Habits</Text>
-          <Text style={styles.placeholder}>Your habits for today will appear here</Text>
-        </View>
-
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Quick Stats</Text>
-          <Text style={styles.placeholder}>Your statistics summary will appear here</Text>
-        </View>
-      </View>
-    </ScrollView>
+      <ScrollView
+        style={styles.scrollView}
+        contentContainerStyle={styles.content}
+        showsVerticalScrollIndicator={false}
+      >
+        <TodayGoals />
+        <LeaderboardPreview />
+        <MyGoalsPreview />
+      </ScrollView>
+    </View>
   );
 }
 
@@ -28,35 +38,21 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#f5f5f5",
   },
+  header: {
+    backgroundColor: "#4F5FD6",
+    paddingTop: 50,
+    paddingBottom: 16,
+    paddingHorizontal: 20,
+    alignItems: "flex-end",
+  },
+  settingsButton: {
+    padding: 8,
+  },
+  scrollView: {
+    flex: 1,
+  },
   content: {
-    padding: 20,
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: "bold",
-    color: "#333",
-    marginBottom: 8,
-  },
-  subtitle: {
-    fontSize: 16,
-    color: "#666",
-    marginBottom: 24,
-  },
-  section: {
-    backgroundColor: "#fff",
-    borderRadius: 12,
     padding: 16,
-    marginBottom: 16,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: "600",
-    color: "#333",
-    marginBottom: 12,
-  },
-  placeholder: {
-    fontSize: 14,
-    color: "#999",
-    fontStyle: "italic",
+    paddingTop: 8,
   },
 });

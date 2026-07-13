@@ -9,6 +9,11 @@ class LoginRequest(BaseModel):
     username: str = Field(..., min_length=3, max_length=50)
     password: str = Field(..., min_length=6)
 
+class RegisterRequest(BaseModel):
+    """Request model for user registration"""
+    username: str = Field(..., min_length=3, max_length=50)
+    password: str = Field(..., min_length=6)
+    timezone: str = Field(default="America/New_York", max_length=64)
 
 class TokenResponse(BaseModel):
     """Response model for successful authentication."""
