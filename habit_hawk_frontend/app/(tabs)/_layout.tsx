@@ -66,6 +66,15 @@ export default function TabLayout() {
           ),
         }}
       />
+       <Tabs.Screen
+        name="store"
+        options={{
+          title: "Store",
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="cart" size={size} color={color} />
+          ),
+        }}
+      />
       <Tabs.Screen
         name="statistics"
         options={{

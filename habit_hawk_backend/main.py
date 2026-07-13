@@ -7,6 +7,9 @@ from starlette.middleware.sessions import SessionMiddleware
 from config import settings
 from database.connection import init_db
 from auth.routes import router as auth_router
+from habit.routes import router as habit_router
+from social.routes import router as social_router
+from leaderboard.routes import router as leaderboard_router
 
 
 @asynccontextmanager
@@ -45,6 +48,9 @@ app.add_middleware(
 
 # Register routers
 app.include_router(auth_router)
+app.include_router(habit_router)
+app.include_router(social_router)
+app.include_router(leaderboard_router)
 
 
 @app.get("/")
