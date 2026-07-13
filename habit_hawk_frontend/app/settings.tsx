@@ -1,6 +1,6 @@
 import React from "react";
 
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert } from "react-native";
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, Platform } from "react-native";
 import { Stack, router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useAuth } from "@/hooks/useAuth";
@@ -8,18 +8,31 @@ import { useAuth } from "@/hooks/useAuth";
 export default function Settings() {
   const { logout, user } = useAuth();
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    if (Platform.OS === "web") {
+      const confirmed = window.confirm(
+        "Are you sure you want to log out?"
+      );
+
+      if (confirmed) {
+        await logout();
+      }
+
+      return;
+    }
+
     Alert.alert(
       "Log Out",
       "Are you sure you want to log out?",
       [
-        { text: "Cancel", style: "cancel" },
+        {
+          text: "Cancel",
+          style: "cancel",
+        },
         {
           text: "Log Out",
           style: "destructive",
-          onPress: async () => {
-            await logout();
-          },
+          onPress: logout,
         },
       ]
     );
