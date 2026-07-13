@@ -15,6 +15,7 @@ interface AuthContextType {
   isAuthenticated: boolean;
   error: string | null;
   login: (username: string, password: string) => Promise<void>;
+  register: (username: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
   clearError: () => void;
 }
@@ -98,6 +99,35 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
   };
 
+/**
+ * Register a new user and sign them in.
+ */
+ const register = async (username: string, password: string) => {
+  try {
+    setIsLoading(true);
+    setError(null);
+
+    await AuthServices.register(username, password);
+
+    const userData = await AuthServices.getCurrentUser();
+    setUser(userData);
+
+    router.replace("/(tabs)");
+  } catch (err) {
+    if (err instanceof ApiError) {
+      setError(err.detail);
+    } else if (err instanceof Error) {
+      setError(err.message);
+    } else {
+      setError("An unexpected error occurred");
+    }
+
+    throw err;
+  } finally {
+    setIsLoading(false);
+  }
+};
+
   /**
    * Logout and clear user data
    */
@@ -130,6 +160,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         isAuthenticated,
         error,
         login,
+        register,
         logout,
         clearError,
       }}

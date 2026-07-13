@@ -7,6 +7,12 @@ export interface LoginRequest {
   password: string;
 }
 
+export interface RegisterRequest {
+  username: string;
+  password: string;
+  timezone?: string;
+}
+
 export interface TokenResponse {
   access_token: string;
   token_type: string;
