@@ -46,7 +46,7 @@ export default function Habits() {
         />
       )}
 
-      <TouchableOpacity style={styles.addButton}>
+      <TouchableOpacity style={styles.addButton} onPress={() => router.push("/add-habit")}>
         <Ionicons name="add" size={32} color="#fff" />
       </TouchableOpacity>
     </View>

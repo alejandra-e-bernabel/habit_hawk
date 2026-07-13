@@ -21,6 +21,13 @@ export default function RootLayout() {
             headerShown: true,
           }}
         />
+        <Stack.Screen
+          name="add-habit"
+          options={{
+            presentation: "modal",
+            headerShown: true,
+          }}
+        />
         <Stack.Screen name="index" options={{ headerShown: false }} />
       </Stack>
     </AuthProvider>
