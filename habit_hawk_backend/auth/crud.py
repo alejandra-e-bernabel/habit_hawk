@@ -41,7 +41,7 @@ def create_user(
     password: str,
     timezone_name: str = "America/New_York",
 ) -> User:
-    """Create and persist a new user with a hased password"""
+    """Create and persist a new user with a hashed password"""
     user = User(
         username=username,
         password_hash=get_password_hash(password),
