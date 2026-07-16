@@ -1,35 +1,28 @@
-import { Stack } from "expo-router";
 import React from "react";
+import { Stack } from "expo-router";
+import {
+  OpenSans_400Regular,
+  OpenSans_600SemiBold,
+  OpenSans_700Bold,
+  useFonts,
+} from "@expo-google-fonts/open-sans";
+
 import { AuthProvider } from "@/context/AuthContext";
 
 export default function RootLayout() {
+  const [fontsLoaded] = useFonts({
+    OpenSans_400Regular,
+    OpenSans_600SemiBold,
+    OpenSans_700Bold,
+  });
+
+  if (!fontsLoaded) {
+    return null;
+  }
+
   return (
     <AuthProvider>
-      <Stack>
-        <Stack.Screen name="login" options={{ headerShown: false }} />
-        <Stack.Screen name="register" options={{ headerShown: false }} />
-        <Stack.Screen
-          name="(tabs)"
-          options={{
-            headerShown: false,
-          }}
-        />
-        <Stack.Screen
-          name="settings"
-          options={{
-            presentation: "modal",
-            headerShown: true,
-          }}
-        />
-        <Stack.Screen
-          name="add-habit"
-          options={{
-            presentation: "modal",
-            headerShown: true,
-          }}
-        />
-        <Stack.Screen name="index" options={{ headerShown: false }} />
-      </Stack>
+      <Stack screenOptions={{ headerShown: false }} />
     </AuthProvider>
   );
 }
