@@ -1,13 +1,20 @@
 import React, { useState } from "react";
 import {
-  View,
-  Text,
+  ActivityIndicator,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  StyleSheet,
   TextInput,
   TouchableOpacity,
-  StyleSheet,
-  ActivityIndicator,
+  View,
 } from "react-native";
 import { Link } from "expo-router";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { StatusBar } from "expo-status-bar";
+
+import { AppText } from "@/components/AppText";
+import { COLORS, FONTS } from "@/constants/theme";
 import { useAuth } from "@/hooks/useAuth";
 import { ApiError } from "@/services/api";
 
@@ -19,10 +26,15 @@ export default function Register() {
 
   const { register, isLoading, clearError } = useAuth();
 
+  const clearFormError = () => {
+    if (formError) {
+      setFormError(null);
+    }
+  };
+
   const handleRegister = async () => {
     const trimmedUsername = username.trim();
 
-    // Remove any previous message before validating again.
     setFormError(null);
     clearError();
 
@@ -61,145 +73,279 @@ export default function Register() {
     }
   };
 
-  const clearFormError = () => {
-    if (formError) {
-      setFormError(null);
-    }
-  };
-
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Habit Hawk</Text>
-      <Text style={styles.subtitle}>Create Account</Text>
+    <View style={styles.screen}>
+      <StatusBar style="light" />
 
-      <TextInput
-        style={styles.input}
-        placeholder="Username"
-        value={username}
-        onChangeText={(value) => {
-          setUsername(value);
-          clearFormError();
-        }}
-        autoCapitalize="none"
-        autoCorrect={false}
-        editable={!isLoading}
-      />
-
-      <TextInput
-        style={styles.input}
-        placeholder="Password"
-        value={password}
-        onChangeText={(value) => {
-          setPassword(value);
-          clearFormError();
-        }}
-        secureTextEntry
-        editable={!isLoading}
-      />
-
-      <TextInput
-        style={styles.input}
-        placeholder="Confirm Password"
-        value={confirmPassword}
-        onChangeText={(value) => {
-          setConfirmPassword(value);
-          clearFormError();
-        }}
-        secureTextEntry
-        editable={!isLoading}
-      />
-
-      {formError ? (
-        <Text style={styles.errorText}>{formError}</Text>
-      ) : null}
-
-      <TouchableOpacity
-        style={[
-          styles.button,
-          isLoading && styles.buttonDisabled,
-        ]}
-        onPress={handleRegister}
-        disabled={isLoading}
+      <KeyboardAvoidingView
+        style={styles.keyboardView}
+        behavior={Platform.OS === "ios" ? "padding" : undefined}
       >
-        {isLoading ? (
-          <ActivityIndicator color="#fff" />
-        ) : (
-          <Text style={styles.buttonText}>Register</Text>
-        )}
-      </TouchableOpacity>
-
-      <Link href="/login" asChild>
-        <TouchableOpacity
-          style={styles.linkButton}
-          disabled={isLoading}
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+          bounces={false}
         >
-          <Text style={styles.linkText}>
-            Already have an account? Login
-          </Text>
-        </TouchableOpacity>
-      </Link>
+          <View style={styles.header}>
+            <SafeAreaView
+              edges={["top"]}
+              style={styles.headerSafeArea}
+            >
+              <View style={styles.logoCircle}>
+                <AppText weight="bold" style={styles.logoText}>
+                  Logo
+                </AppText>
+              </View>
+
+              <AppText weight="semiBold" style={styles.appName}>
+                Habit Hawk
+              </AppText>
+            </SafeAreaView>
+          </View>
+
+          <View style={styles.formContainer}>
+            <AppText weight="bold" style={styles.formTitle}>
+              Sign Up
+            </AppText>
+
+            <AppText style={styles.formSubtitle}>
+              Enter your username and password to sign up
+            </AppText>
+
+            <TextInput
+              style={styles.input}
+              placeholder="Username"
+              placeholderTextColor={COLORS.placeholder}
+              value={username}
+              onChangeText={(value) => {
+                setUsername(value);
+                clearFormError();
+              }}
+              autoCapitalize="none"
+              autoCorrect={false}
+              autoComplete="username"
+              editable={!isLoading}
+            />
+
+            <TextInput
+              style={styles.input}
+              placeholder="Password"
+              placeholderTextColor={COLORS.placeholder}
+              value={password}
+              onChangeText={(value) => {
+                setPassword(value);
+                clearFormError();
+              }}
+              secureTextEntry
+              autoComplete="new-password"
+              editable={!isLoading}
+            />
+
+            <TextInput
+              style={styles.input}
+              placeholder="Repeat Password"
+              placeholderTextColor={COLORS.placeholder}
+              value={confirmPassword}
+              onChangeText={(value) => {
+                setConfirmPassword(value);
+                clearFormError();
+              }}
+              secureTextEntry
+              autoComplete="new-password"
+              editable={!isLoading}
+              returnKeyType="done"
+              onSubmitEditing={handleRegister}
+            />
+
+            {formError ? (
+              <AppText style={styles.errorText}>
+                {formError}
+              </AppText>
+            ) : null}
+
+            <TouchableOpacity
+              style={[
+                styles.primaryButton,
+                isLoading && styles.primaryButtonDisabled,
+              ]}
+              onPress={handleRegister}
+              disabled={isLoading}
+              activeOpacity={0.8}
+            >
+              {isLoading ? (
+                <ActivityIndicator color={COLORS.white} />
+              ) : (
+                <AppText
+                  weight="semiBold"
+                  style={styles.primaryButtonText}
+                >
+                  Sign Up
+                </AppText>
+              )}
+            </TouchableOpacity>
+
+            <View style={styles.dividerRow}>
+              <View style={styles.dividerLine} />
+
+              <AppText
+                weight="semiBold"
+                style={styles.dividerText}
+              >
+                Or
+              </AppText>
+
+              <View style={styles.dividerLine} />
+            </View>
+
+            <View style={styles.accountRow}>
+              <AppText style={styles.accountText}>
+                Already have an account?{" "}
+              </AppText>
+
+              <Link href="/login" asChild>
+                <TouchableOpacity disabled={isLoading}>
+                  <AppText
+                    weight="semiBold"
+                    style={styles.accountLink}
+                  >
+                    Login
+                  </AppText>
+                </TouchableOpacity>
+              </Link>
+            </View>
+          </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  screen: {
     flex: 1,
-    justifyContent: "center",
+    backgroundColor: COLORS.background,
+    overflow: "hidden",
+  },
+  keyboardView: {
+    flex: 1,
+  },
+  scrollContent: {
+    flexGrow: 1,
+    backgroundColor: COLORS.background,
+    paddingBottom: 40,
+  },
+  header: {
+    alignSelf: "center",
     alignItems: "center",
-    padding: 20,
-    backgroundColor: "#f5f5f5",
+    width: "140%",
+    height: 350,
+    backgroundColor: COLORS.primary,
+    borderBottomLeftRadius: 280,
+    borderBottomRightRadius: 280,
+    overflow: "hidden",
   },
-  title: {
+  headerSafeArea: {
+    flex: 1,
+    alignItems: "center",
+    paddingTop: 18,
+  },
+  logoCircle: {
+    width: 96,
+    height: 96,
+    borderRadius: 48,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: COLORS.logoBackground,
+  },
+  logoText: {
+    color: COLORS.heading,
+    fontSize: 16,
+  },
+  appName: {
+    marginTop: 20,
+    color: COLORS.white,
     fontSize: 32,
-    fontWeight: "bold",
-    marginBottom: 8,
-    color: "#333",
   },
-  subtitle: {
-    fontSize: 24,
-    marginBottom: 32,
-    color: "#666",
+  formContainer: {
+    width: "100%",
+    maxWidth: 480,
+    alignSelf: "center",
+    paddingTop: 28,
+    paddingHorizontal: 24,
+  },
+  formTitle: {
+    color: COLORS.heading,
+    fontSize: 28,
+  },
+  formSubtitle: {
+    marginTop: 4,
+    marginBottom: 28,
+    color: COLORS.heading,
+    fontSize: 16,
   },
   input: {
     width: "100%",
-    height: 50,
-    borderWidth: 1,
-    borderColor: "#ddd",
-    borderRadius: 8,
+    height: 51,
+    marginBottom: 20,
     paddingHorizontal: 16,
-    marginBottom: 16,
-    backgroundColor: "#fff",
+    borderWidth: 1,
+    borderColor: COLORS.inputBorder,
+    borderRadius: 8,
+    backgroundColor: COLORS.inputBackground,
+    color: COLORS.heading,
+    fontFamily: FONTS.regular,
+    fontSize: 14,
   },
   errorText: {
-    width: "100%",
-    color: "#B00020",
+    marginTop: -8,
+    marginBottom: 12,
+    color: COLORS.error,
     fontSize: 14,
-    marginBottom: 8,
     textAlign: "center",
   },
-  button: {
+  primaryButton: {
     width: "100%",
-    height: 50,
-    backgroundColor: "#007AFF",
-    borderRadius: 8,
-    justifyContent: "center",
+    height: 51,
     alignItems: "center",
-    marginTop: 8,
+    justifyContent: "center",
+    borderRadius: 6,
+    backgroundColor: COLORS.primary,
   },
-  buttonDisabled: {
+  primaryButtonDisabled: {
     opacity: 0.6,
   },
-  buttonText: {
-    color: "#fff",
-    fontSize: 16,
-    fontWeight: "600",
+  primaryButtonText: {
+    color: COLORS.white,
+    fontSize: 18,
   },
-  linkButton: {
-    marginTop: 16,
+  dividerRow: {
+    width: "100%",
+    flexDirection: "row",
+    alignItems: "center",
+    marginVertical: 26,
   },
-  linkText: {
-    color: "#007AFF",
-    fontSize: 14,
+  dividerLine: {
+    flex: 1,
+    height: 2,
+    backgroundColor: COLORS.divider,
+  },
+  dividerText: {
+    marginHorizontal: 14,
+    color: COLORS.placeholder,
+    fontSize: 18,
+  },
+  accountRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  accountText: {
+    color: COLORS.heading,
+    fontSize: 18,
+  },
+  accountLink: {
+    color: COLORS.primary,
+    fontSize: 18,
   },
 });
