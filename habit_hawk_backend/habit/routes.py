@@ -14,6 +14,8 @@ from habit.crud import (
     create_habit_log,
     delete_habit,
     delete_habit_log,
+    get_all_habits,
+    get_habit_by_id,
     get_habit_logs,
     get_todays_habits,
     update_habit,
@@ -30,6 +32,19 @@ from habit.schemas import (
 )
 
 router = APIRouter(prefix="/habits", tags=["Habits"])
+
+
+@router.get("", response_model=list[HabitResponse])
+def list_habits(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """
+    Get all habits belonging to the authenticated user.
+
+    Requires a valid JWT token in the Authorization header.
+    """
+    return get_all_habits(db, current_user)
 
 
 @router.post("", response_model=HabitResponse, status_code=status.HTTP_201_CREATED)
@@ -202,3 +217,18 @@ def get_today_habits(
         completed_count=completed_count,
         habits=habits
     )
+
+
+@router.get("/{habit_id}", response_model=HabitResponse)
+def get_single_habit(
+    habit_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """
+    Get a single habit by ID.
+
+    Only the owner of the habit can view it.
+    Requires a valid JWT token in the Authorization header.
+    """
+    return get_habit_by_id(db, habit_id, current_user.user_id)

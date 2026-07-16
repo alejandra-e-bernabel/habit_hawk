@@ -1,16 +1,18 @@
 import React from "react";
 
-
-import { View, Text, StyleSheet, FlatList, TouchableOpacity } from "react-native";
-import { router } from "expo-router";
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator } from "react-native";
+import { router, useFocusEffect } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
+import useGetAllHabits from "@/hooks/habits/useGetAllHabits";
 
 export default function Habits() {
-  // Mock data - will be replaced with real data
-  const habits = [
-    // { id: 1, name: "Morning Exercise", streak: 5 },
-    // { id: 2, name: "Read 30 min", streak: 12 },
-  ];
+  const { habits, loading, error, refetch } = useGetAllHabits();
+
+  useFocusEffect(
+    React.useCallback(() => {
+      refetch();
+    }, [refetch])
+  );
 
   const handleHabitPress = (habitId: number) => {
     router.push(`/(tabs)/habits/${habitId}`);
@@ -18,7 +20,17 @@ export default function Habits() {
 
   return (
     <View style={styles.container}>
-      {habits.length === 0 ? (
+      {loading ? (
+        <View style={styles.emptyState}>
+          <ActivityIndicator size="large" color="#007AFF" />
+        </View>
+      ) : error ? (
+        <View style={styles.emptyState}>
+          <Ionicons name="alert-circle-outline" size={64} color="#ccc" />
+          <Text style={styles.emptyTitle}>Couldn&apos;t Load Habits</Text>
+          <Text style={styles.emptyText}>{error}</Text>
+        </View>
+      ) : habits.length === 0 ? (
         <View style={styles.emptyState}>
           <Ionicons name="checkmark-circle-outline" size={64} color="#ccc" />
           <Text style={styles.emptyTitle}>No Habits Yet</Text>
@@ -29,15 +41,17 @@ export default function Habits() {
       ) : (
         <FlatList
           data={habits}
-          keyExtractor={(item) => item.id.toString()}
+          keyExtractor={(item) => item.habit_id.toString()}
           renderItem={({ item }) => (
             <TouchableOpacity
               style={styles.habitCard}
-              onPress={() => handleHabitPress(item.id)}
+              onPress={() => handleHabitPress(item.habit_id)}
             >
               <View style={styles.habitInfo}>
                 <Text style={styles.habitName}>{item.name}</Text>
-                <Text style={styles.habitStreak}>{item.streak} day streak</Text>
+                <Text style={styles.habitStreak}>
+                  {item.target_count}x {item.period}
+                </Text>
               </View>
               <Ionicons name="chevron-forward" size={24} color="#999" />
             </TouchableOpacity>

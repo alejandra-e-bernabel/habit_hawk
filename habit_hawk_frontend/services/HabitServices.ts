@@ -43,6 +43,20 @@ export async function createHabit(data: HabitCreate): Promise<HabitResponse> {
 }
 
 /**
+ * Get a single habit by ID
+ */
+export async function getHabit(habitId: number): Promise<HabitResponse> {
+  const token = await getToken();
+
+  return await apiFetch<HabitResponse>(`/habits/${habitId}`, {
+    method: "GET",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+}
+
+/**
  * Update an existing habit
  */
 export async function updateHabit(

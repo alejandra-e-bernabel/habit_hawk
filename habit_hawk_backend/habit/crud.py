@@ -59,6 +59,25 @@ def get_habit_by_id(db: Session, habit_id: int, user_id: int) -> Habit:
     return habit
 
 
+def get_all_habits(db: Session, user: User) -> list[Habit]:
+    """
+    Get all habits belonging to the authenticated user.
+
+    Args:
+        db: Database session
+        user: Authenticated user
+
+    Returns:
+        List of Habit objects, most recently created first
+    """
+    return (
+        db.query(Habit)
+        .filter(Habit.user_id == user.user_id)
+        .order_by(Habit.habit_id.desc())
+        .all()
+    )
+
+
 def create_habit(db: Session, habit_data: HabitCreate, user: User) -> Habit:
     """
     Create a new habit for the authenticated user.

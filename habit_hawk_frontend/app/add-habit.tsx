@@ -12,41 +12,85 @@ import {
 } from "react-native";
 import { Stack, router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-import { createHabit } from "@/services/HabitServices";
+import useCreateHabit from "@/hooks/habits/useCreateHabit";
+import { HabitType, HabitPeriod } from "@/types/habits";
+import SegmentedControl from "@/components/SegmentedControl";
+import WeekdaySelector from "@/components/WeekdaySelector";
+
+const HABIT_TYPE_OPTIONS = [
+  { label: "Reminder", value: HabitType.REMINDER },
+  { label: "Log (with duration)", value: HabitType.LOG },
+];
+
+const PERIOD_OPTIONS = [
+  { label: "Daily", value: HabitPeriod.DAILY },
+  { label: "Weekly", value: HabitPeriod.WEEKLY },
+  { label: "Monthly", value: HabitPeriod.MONTHLY },
+];
+
+function frequencyLabel(period: HabitPeriod) {
+  switch (period) {
+    case HabitPeriod.DAILY:
+      return "time(s) per day";
+    case HabitPeriod.MONTHLY:
+      return "time(s) per month";
+    default:
+      return "time(s) per week";
+  }
+}
 
 export default function AddHabit() {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
-  const [frequency, setFrequency] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
+  const [habitType, setHabitType] = useState<HabitType>(HabitType.REMINDER);
+  const [period, setPeriod] = useState<HabitPeriod>(HabitPeriod.DAILY);
+  const [targetCount, setTargetCount] = useState("1");
+  const [durationMinutes, setDurationMinutes] = useState("");
+  const [startedOn, setStartedOn] = useState("");
+  const [scheduleDays, setScheduleDays] = useState<number[]>([]);
+  const { createHabit, loading, error } = useCreateHabit();
 
   const handleAddHabit = async () => {
-    const frequencyNum = parseInt(frequency, 10);
-
     if (!title.trim()) {
       Alert.alert("Error", "Please enter a habit title");
       return;
     }
 
-    if (!frequency || isNaN(frequencyNum) || frequencyNum < 1) {
-      Alert.alert("Error", "Please enter a valid frequency (times per week)");
+    const targetCountNum = parseInt(targetCount, 10);
+    if (!targetCount || isNaN(targetCountNum) || targetCountNum < 1) {
+      Alert.alert("Error", `Please enter a valid target count (${frequencyLabel(period)})`);
+      return;
+    }
+
+    let durationNum: number | undefined;
+    if (habitType === HabitType.LOG && durationMinutes.trim()) {
+      durationNum = parseInt(durationMinutes, 10);
+      if (isNaN(durationNum) || durationNum < 1) {
+        Alert.alert("Error", "Please enter a valid target duration (minutes)");
+        return;
+      }
+    }
+
+    if (startedOn.trim() && !/^\d{4}-\d{2}-\d{2}$/.test(startedOn.trim())) {
+      Alert.alert("Error", "Start date must be in YYYY-MM-DD format");
       return;
     }
 
     try {
-      setIsLoading(true);
       await createHabit({
         name: title.trim(),
         motivation_note: description.trim() || null,
-        period: "weekly",
-        target_count: frequencyNum,
+        habit_type: habitType,
+        period,
+        target_count: targetCountNum,
+        target_duration_minutes: durationNum,
+        started_on: startedOn.trim() || undefined,
+        schedule_days: scheduleDays.length > 0 ? scheduleDays : undefined,
       });
 
       router.back();
-    } catch (err) {
-      Alert.alert("Failed to Add Habit", err instanceof Error ? err.message : "Please try again");
-    } finally {
-      setIsLoading(false);
+    } catch {
+      Alert.alert("Failed to Add Habit", error || "Please try again");
     }
   };
 
@@ -83,21 +127,51 @@ export default function AddHabit() {
             numberOfLines={4}
           />
 
-          <Text style={styles.label}>Frequency (times per week)</Text>
+          <Text style={styles.label}>Habit Type</Text>
+          <SegmentedControl options={HABIT_TYPE_OPTIONS} value={habitType} onChange={setHabitType} />
+
+          <Text style={styles.label}>Period</Text>
+          <SegmentedControl options={PERIOD_OPTIONS} value={period} onChange={setPeriod} />
+
+          <Text style={styles.label}>Target Count ({frequencyLabel(period)})</Text>
           <TextInput
             style={styles.input}
             placeholder="e.g. 3"
-            value={frequency}
-            onChangeText={setFrequency}
+            value={targetCount}
+            onChangeText={setTargetCount}
             keyboardType="number-pad"
           />
 
+          {habitType === HabitType.LOG && (
+            <>
+              <Text style={styles.label}>Target Duration (minutes, optional)</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="e.g. 20"
+                value={durationMinutes}
+                onChangeText={setDurationMinutes}
+                keyboardType="number-pad"
+              />
+            </>
+          )}
+
+          <Text style={styles.label}>Start Date (optional)</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="YYYY-MM-DD"
+            value={startedOn}
+            onChangeText={setStartedOn}
+          />
+
+          <Text style={styles.label}>Schedule Days (optional)</Text>
+          <WeekdaySelector selectedDays={scheduleDays} onChange={setScheduleDays} />
+
           <TouchableOpacity
-            style={[styles.button, isLoading && styles.buttonDisabled]}
+            style={[styles.button, loading && styles.buttonDisabled]}
             onPress={handleAddHabit}
-            disabled={isLoading}
+            disabled={loading}
           >
-            {isLoading ? (
+            {loading ? (
               <ActivityIndicator color="#fff" />
             ) : (
               <Text style={styles.buttonText}>Add Habit</Text>
