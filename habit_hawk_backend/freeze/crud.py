@@ -21,7 +21,6 @@ from habit.crud import get_habit_by_id, update_streak_on_log
 
 
 FREEZE_STREAK_INTERVAL = 7
-FREEZE_ELIGIBLE_STATUSES = {LogStatus.completed, LogStatus.frozen}
 
 
 def calculate_days_until_next_freeze(current_streak: int) -> int:
@@ -39,15 +38,23 @@ def count_earned_freezes_for_logs(logs: list[HabitLog]) -> int:
     expected_date: date | None = None
 
     for log in logs:
-        if log.status not in FREEZE_ELIGIBLE_STATUSES:
+        if log.status == LogStatus.frozen:
+            if expected_date is None or log.logged_for_date == expected_date:
+                expected_date = log.logged_for_date + timedelta(days=1)
+                continue
             streak_length = 0
             expected_date = None
             continue
 
-        if expected_date is None or log.logged_for_date != expected_date:
-            streak_length = 1
-        else:
+        if log.status != LogStatus.completed:
+            streak_length = 0
+            expected_date = None
+            continue
+
+        if expected_date is None or log.logged_for_date == expected_date:
             streak_length += 1
+        else:
+            streak_length = 1
 
         if streak_length % FREEZE_STREAK_INTERVAL == 0:
             earned_count += 1

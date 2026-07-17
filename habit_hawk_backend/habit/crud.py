@@ -222,6 +222,37 @@ def calculate_score(habit: Habit, log_status: LogStatus, duration_minutes: Optio
     return leaderboard_score, spendable_currency
 
 
+def calculate_streak_metrics(logs: list[HabitLog]) -> tuple[int, int, Optional[date]]:
+    """Calculate streak metrics where frozen logs bridge gaps but do not count as days."""
+    current_streak = 0
+    longest_streak = 0
+    last_completed_date = None
+    expected_date = None
+
+    for log in logs:
+        if log.status == LogStatus.frozen:
+            expected_date = (log.logged_for_date + timedelta(days=1)) if expected_date is None else expected_date
+            if log.logged_for_date == expected_date - timedelta(days=1):
+                expected_date = log.logged_for_date + timedelta(days=1)
+            continue
+
+        if log.status != LogStatus.completed:
+            current_streak = 0
+            expected_date = None
+            continue
+
+        if expected_date is None or log.logged_for_date == expected_date:
+            current_streak += 1
+        else:
+            current_streak = 1
+
+        longest_streak = max(longest_streak, current_streak)
+        last_completed_date = log.logged_for_date
+        expected_date = log.logged_for_date + timedelta(days=1)
+
+    return current_streak, longest_streak, last_completed_date
+
+
 def update_streak_on_log(db: Session, habit: Habit) -> None:
     """
     Recalculate and update the habit streak based on log history.
@@ -254,45 +285,7 @@ def update_streak_on_log(db: Session, habit: Habit) -> None:
         db.commit()
         return
 
-    # Calculate current streak (working backwards from most recent)
-    current_streak = 0
-    last_completed_date = None
-    expected_date = None
-
-    for log in logs:
-        # Only count completed or frozen
-        if log.status not in [LogStatus.completed, LogStatus.frozen]:
-            break
-
-        # Check if this is consecutive
-        if expected_date is None or log.logged_for_date == expected_date:
-            current_streak += 1
-            if log.status == LogStatus.completed and last_completed_date is None:
-                last_completed_date = log.logged_for_date
-            expected_date = log.logged_for_date - timedelta(days=1)
-        else:
-            # Gap in streak
-            break
-
-    # Calculate longest streak (scan all history)
-    longest_streak = 0
-    temp_streak = 0
-    temp_expected = None
-
-    for log in reversed(logs):  # Go forward in time
-        if log.status in [LogStatus.completed, LogStatus.frozen]:
-            if temp_expected is None or log.logged_for_date == temp_expected:
-                temp_streak += 1
-                longest_streak = max(longest_streak, temp_streak)
-                temp_expected = log.logged_for_date + timedelta(days=1)
-            else:
-                # Reset streak
-                temp_streak = 1
-                temp_expected = log.logged_for_date + timedelta(days=1)
-        else:
-            # Streak broken
-            temp_streak = 0
-            temp_expected = None
+    current_streak, longest_streak, last_completed_date = calculate_streak_metrics(logs)
 
     streak_record.current_streak = current_streak
     streak_record.longest_streak = max(longest_streak, current_streak)
