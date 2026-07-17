@@ -1,23 +1,38 @@
 import React from "react";
 
-
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from "react-native";
-import { useLocalSearchParams, Stack } from "expo-router";
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator } from "react-native";
+import { useLocalSearchParams, useFocusEffect, router, Stack } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
+import useGetHabit from "@/hooks/habits/useGetHabit";
 
 export default function HabitDetail() {
-  const { id } = useLocalSearchParams();
+  const { id } = useLocalSearchParams<{ id: string }>();
+  const habitId = Number(id);
+  const { habit, loading, error, refetch } = useGetHabit(habitId);
 
-  // Mock data - will be replaced with real data fetched by ID
-  const habit = {
-    id: id,
-    name: "Habit Name",
-    motivation: "Why you're doing this habit",
-    streak: 0,
-    completionRate: 0,
-    targetCount: 1,
-    period: "daily",
-  };
+  useFocusEffect(
+    React.useCallback(() => {
+      refetch();
+    }, [refetch])
+  );
+
+  if (loading) {
+    return (
+      <View style={styles.centered}>
+        <ActivityIndicator size="large" color="#007AFF" />
+      </View>
+    );
+  }
+
+  if (error || !habit) {
+    return (
+      <View style={styles.centered}>
+        <Ionicons name="alert-circle-outline" size={64} color="#ccc" />
+        <Text style={styles.emptyTitle}>Couldn&apos;t Load Habit</Text>
+        <Text style={styles.emptyText}>{error || "Habit not found"}</Text>
+      </View>
+    );
+  }
 
   return (
     <>
@@ -33,29 +48,15 @@ export default function HabitDetail() {
           <View style={styles.card}>
             <Text style={styles.cardTitle}>Motivation</Text>
             <Text style={styles.motivationText}>
-              {habit.motivation || "No motivation set"}
+              {habit.motivation_note || "No motivation set"}
             </Text>
-          </View>
-
-          {/* Stats */}
-          <View style={styles.statsContainer}>
-            <View style={styles.statBox}>
-              <Ionicons name="flame" size={32} color="#FF6B6B" />
-              <Text style={styles.statValue}>{habit.streak}</Text>
-              <Text style={styles.statLabel}>Day Streak</Text>
-            </View>
-            <View style={styles.statBox}>
-              <Ionicons name="stats-chart" size={32} color="#4DABF7" />
-              <Text style={styles.statValue}>{habit.completionRate}%</Text>
-              <Text style={styles.statLabel}>Completion</Text>
-            </View>
           </View>
 
           {/* Goal */}
           <View style={styles.card}>
             <Text style={styles.cardTitle}>Goal</Text>
             <Text style={styles.goalText}>
-              {habit.targetCount} time{habit.targetCount > 1 ? "s" : ""} {habit.period}
+              {habit.target_count} time{habit.target_count > 1 ? "s" : ""} {habit.period}
             </Text>
           </View>
 
@@ -72,7 +73,10 @@ export default function HabitDetail() {
               <Text style={styles.completeButtonText}>Mark Complete</Text>
             </TouchableOpacity>
 
-            <TouchableOpacity style={styles.editButton}>
+            <TouchableOpacity
+              style={styles.editButton}
+              onPress={() => router.push(`/edit-habit?id=${habit.habit_id}`)}
+            >
               <Ionicons name="create-outline" size={24} color="#007AFF" />
               <Text style={styles.editButtonText}>Edit Habit</Text>
             </TouchableOpacity>
@@ -86,6 +90,13 @@ export default function HabitDetail() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: "#f5f5f5",
+  },
+  centered: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 32,
     backgroundColor: "#f5f5f5",
   },
   content: {
@@ -108,30 +119,6 @@ const styles = StyleSheet.create({
     color: "#666",
     lineHeight: 24,
   },
-  statsContainer: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginBottom: 16,
-  },
-  statBox: {
-    flex: 1,
-    backgroundColor: "#fff",
-    borderRadius: 12,
-    padding: 20,
-    alignItems: "center",
-    marginHorizontal: 4,
-  },
-  statValue: {
-    fontSize: 28,
-    fontWeight: "bold",
-    color: "#333",
-    marginTop: 8,
-    marginBottom: 4,
-  },
-  statLabel: {
-    fontSize: 14,
-    color: "#666",
-  },
   goalText: {
     fontSize: 16,
     color: "#666",
@@ -140,6 +127,18 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: "#999",
     fontStyle: "italic",
+  },
+  emptyTitle: {
+    fontSize: 20,
+    fontWeight: "600",
+    color: "#333",
+    marginTop: 16,
+    marginBottom: 8,
+  },
+  emptyText: {
+    fontSize: 14,
+    color: "#666",
+    textAlign: "center",
   },
   actionButtons: {
     marginTop: 8,
