@@ -6,6 +6,7 @@
 import React, { createContext, useState, useEffect, ReactNode } from "react";
 import { router } from "expo-router";
 import * as AuthServices from "@/services/AuthServices";
+import * as ProfileServices from "@/services/ProfileServices";
 import type { UserResponse } from "@/types/auth";
 import { ApiError } from "@/services/api";
 
@@ -15,9 +16,11 @@ interface AuthContextType {
   isAuthenticated: boolean;
   error: string | null;
   login: (username: string, password: string) => Promise<void>;
-  register: (username: string, password: string) => Promise<void>;
+  register: (username: string, password: string, firstName?: string, lastName?: string, profileIconName?: string) => Promise<void>;
   logout: () => Promise<void>;
   clearError: () => void;
+  updateProfile: (firstName?: string, lastName?: string, profileIconName?: string) => Promise<void>;
+  refreshUser: () => Promise<void>;
 }
 
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -102,12 +105,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
 /**
  * Register a new user and sign them in.
  */
- const register = async (username: string, password: string) => {
+ const register = async (username: string, password: string, firstName?: string, lastName?: string, profileIconName?: string) => {
   try {
     setIsLoading(true);
     setError(null);
 
-    await AuthServices.register(username, password);
+    await AuthServices.register(username, password, firstName, lastName, profileIconName);
 
     const userData = await AuthServices.getCurrentUser();
     setUser(userData);
@@ -152,6 +155,51 @@ export function AuthProvider({ children }: AuthProviderProps) {
     setError(null);
   };
 
+  /**
+   * Update user profile
+   */
+  const updateProfile = async (
+    firstName?: string,
+    lastName?: string,
+    profileIconName?: string
+  ) => {
+    try {
+      setIsLoading(true);
+      setError(null);
+
+      const profileData: ProfileServices.ProfileUpdateData = {};
+      if (firstName !== undefined) profileData.first_name = firstName;
+      if (lastName !== undefined) profileData.last_name = lastName;
+      if (profileIconName !== undefined) profileData.profile_icon_name = profileIconName;
+
+      const updatedUser = await ProfileServices.updateProfile(profileData);
+      setUser(updatedUser);
+    } catch (err) {
+      if (err instanceof ApiError) {
+        setError(err.detail);
+      } else if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError("Failed to update profile");
+      }
+      throw err;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  /**
+   * Refresh user data from server
+   */
+  const refreshUser = async () => {
+    try {
+      const userData = await AuthServices.getCurrentUser();
+      setUser(userData);
+    } catch (err) {
+      console.error("Failed to refresh user:", err);
+    }
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -163,6 +211,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
         register,
         logout,
         clearError,
+        updateProfile,
+        refreshUser,
       }}
     >
       {children}

@@ -3,7 +3,9 @@ import React from "react";
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, Platform } from "react-native";
 import { Stack, router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
+import { Colors } from "@/constants/Colors";
 import { useAuth } from "@/hooks/useAuth";
+import AvatarIcon from "@/components/AvatarIcon";
 
 export default function Settings() {
   const { logout, user } = useAuth();
@@ -41,9 +43,15 @@ export default function Settings() {
     {
       title: "Account",
       items: [
-        { icon: "person-outline", label: "Profile", action: () => {} },
+        { icon: "person-outline", label: "Edit Profile", action: () => router.push("/profile") },
         { icon: "lock-closed-outline", label: "Change Password", action: () => {} },
         { icon: "time-outline", label: "Timezone", action: () => {} },
+      ],
+    },
+    {
+      title: "Social",
+      items: [
+        { icon: "people-outline", label: "Friends", action: () => router.push("/friends") },
       ],
     },
     {
@@ -72,13 +80,43 @@ export default function Settings() {
           presentation: "modal",
           headerLeft: () => (
             <TouchableOpacity onPress={() => router.back()}>
-              <Ionicons name="close" size={28} color="#007AFF" />
+              <Ionicons name="close-outline" size={28} color="Colors.primary" />
             </TouchableOpacity>
           ),
         }}
       />
       <ScrollView style={styles.container}>
         <View style={styles.content}>
+          {/* User Profile Preview */}
+          {user && (
+            <View style={styles.profileSection}>
+              <AvatarIcon
+                firstName={user.first_name}
+                lastName={user.last_name}
+                username={user.username}
+                profileIconName={user.profile_icon_name}
+                profileImageUrl={user.profile_image_url}
+                size="large"
+                borderColor={Colors.primary}
+                borderWidth={3}
+              />
+              <View style={styles.profileInfo}>
+                <Text style={styles.profileName}>
+                  {user.first_name || user.last_name
+                    ? `${user.first_name || ""} ${user.last_name || ""}`.trim()
+                    : user.username}
+                </Text>
+                <Text style={styles.profileUsername}>@{user.username}</Text>
+              </View>
+              <TouchableOpacity
+                style={styles.editProfileButton}
+                onPress={() => router.push("/profile")}
+              >
+                <Ionicons name="create-outline" size={20} color={Colors.primary} />
+              </TouchableOpacity>
+            </View>
+          )}
+
           {settingsSections.map((section, index) => (
             <View key={index} style={styles.section}>
               <Text style={styles.sectionTitle}>{section.title}</Text>
@@ -96,7 +134,7 @@ export default function Settings() {
                       <Ionicons name={item.icon as any} size={24} color="#666" />
                       <Text style={styles.settingLabel}>{item.label}</Text>
                     </View>
-                    <Ionicons name="chevron-forward" size={20} color="#999" />
+                    <Ionicons name="chevron-forward-outline" size={20} color="#999" />
                   </TouchableOpacity>
                 ))}
               </View>
@@ -107,12 +145,6 @@ export default function Settings() {
             <Ionicons name="log-out-outline" size={24} color="#FF3B30" />
             <Text style={styles.logoutText}>Log Out</Text>
           </TouchableOpacity>
-
-          {user && (
-            <Text style={styles.userInfo}>
-              Logged in as: {user.username}
-            </Text>
-          )}
 
           <Text style={styles.version}>Version 1.0.0</Text>
         </View>
@@ -129,6 +161,31 @@ const styles = StyleSheet.create({
   content: {
     padding: 16,
     paddingBottom: 32,
+  },
+  profileSection: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#fff",
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 24,
+  },
+  profileInfo: {
+    flex: 1,
+    marginLeft: 16,
+  },
+  profileName: {
+    fontSize: 18,
+    fontWeight: "600",
+    color: "#333",
+    marginBottom: 4,
+  },
+  profileUsername: {
+    fontSize: 14,
+    color: "#666",
+  },
+  editProfileButton: {
+    padding: 8,
   },
   section: {
     marginBottom: 24,
@@ -182,12 +239,6 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: "#FF3B30",
     marginLeft: 8,
-  },
-  userInfo: {
-    textAlign: "center",
-    fontSize: 14,
-    color: "#666",
-    marginTop: 16,
   },
   version: {
     textAlign: "center",

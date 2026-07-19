@@ -1,79 +1,134 @@
 import React, { useState } from "react";
-
-import { View, Text, StyleSheet, ScrollView } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
+import { View, Text, StyleSheet, ScrollView, ActivityIndicator } from "react-native";
 import { useFocusEffect } from "expo-router";
-import useGetTodaysHabits from "@/hooks/habits/useGetTodaysHabits";
-import useGetWeeklyStats from "@/hooks/leaderboard/useGetWeeklyStats";
+import { Colors } from "@/constants/Colors";
+import SegmentedControl from "@/components/SegmentedControl";
+import StatMetricTile from "@/components/StatMetricTile";
+import WeeklyProgressChart from "@/components/WeeklyProgressChart";
+import HabitBreakdownRow from "@/components/HabitBreakdownRow";
+import useStatisticsData from "@/hooks/habits/useStatisticsData";
+import type { StatisticsRange } from "@/types/habits";
+import type { DayProgress } from "@/components/WeeklyProgressChart";
+
+const RANGE_OPTIONS = [
+  { label: "Week", value: "week" as const },
+  { label: "Month", value: "month" as const },
+  { label: "All time", value: "all_time" as const },
+];
 
 export default function Statistics() {
   const [refreshKey, setRefreshKey] = useState(0);
-  const { todaysHabits, loading: todaysLoading } = useGetTodaysHabits();
-  const { weeklyStats, loading: weeklyLoading } = useGetWeeklyStats();
+  const [selectedRange, setSelectedRange] = useState<StatisticsRange>("week");
+  const { data, loading, refetch } = useStatisticsData(selectedRange);
 
   useFocusEffect(
     React.useCallback(() => {
       setRefreshKey((current) => current + 1);
-    }, [])
+      refetch();
+    }, [refetch])
   );
 
-  const habits = todaysHabits?.habits ?? [];
-  const currentStreak = habits.reduce((max, habit) => Math.max(max, habit.current_streak), 0);
-  const completedCount = todaysHabits?.completed_count ?? 0;
-  const totalHabits = todaysHabits?.total_habits ?? 0;
-  const completionRate = totalHabits > 0 ? Math.round((completedCount / totalHabits) * 100) : 0;
-  const totalPoints = weeklyStats?.total_score ?? 0;
+  const { overview, weeklyProgress, habitBreakdown } = data;
+
+  // Transform weekly progress data for the chart
+  const chartData: DayProgress[] =
+    weeklyProgress?.days.map((day) => ({
+      day: day.day_name,
+      count: day.completed_count,
+      isToday: day.is_today,
+      isFuture: false, // Computed from date comparison if needed
+    })) ?? [];
 
   return (
     <ScrollView key={refreshKey} style={styles.container}>
       <View style={styles.content}>
-        <View style={styles.statCard}>
-          <View style={styles.statHeader}>
-            <Ionicons name="flame" size={24} color="#FF6B6B" />
-            <Text style={styles.statTitle}>Current Streak</Text>
+        {/* Range Selector */}
+        <View style={styles.rangeSelector}>
+          <SegmentedControl
+            options={RANGE_OPTIONS}
+            value={selectedRange}
+            onChange={(value) => setSelectedRange(value)}
+          />
+        </View>
+
+        {loading ? (
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color={Colors.primary} />
           </View>
-          <Text style={styles.statValue}>{todaysLoading ? "-" : `${currentStreak} days`}</Text>
-          <Text style={styles.statSubtext}>
-            {currentStreak > 0 ? "Keep going!" : "Start with today."}
-          </Text>
-        </View>
+        ) : (
+          <>
+            {/* Metric Grid - 2x2 */}
+            <View style={styles.metricGrid}>
+              <StatMetricTile
+                icon="flame-outline"
+                iconColor={Colors.accentText}
+                label="Current streak"
+                value={overview?.current_streak ?? 0}
+                subLabel={`Best: ${overview?.longest_streak ?? 0}`}
+              />
+              <StatMetricTile
+                icon="star-outline"
+                iconColor={Colors.primary}
+                label="Points"
+                value={overview?.total_points ?? 0}
+              />
+              <StatMetricTile
+                icon="trending-up-outline"
+                iconColor={Colors.primary}
+                label="Completion"
+                value={`${Math.round(overview?.completion_rate ?? 0)}%`}
+              />
+              <StatMetricTile
+                icon="checkmark-circle-outline"
+                iconColor={Colors.primary}
+                label="Completed"
+                value={overview?.completed_count ?? 0}
+              />
+            </View>
 
-        <View style={styles.statCard}>
-          <View style={styles.statHeader}>
-            <Ionicons name="checkmark-done" size={24} color="#51CF66" />
-            <Text style={styles.statTitle}>Habits Completed</Text>
-          </View>
-          <Text style={styles.statValue}>{todaysLoading ? "-" : completedCount}</Text>
-          <Text style={styles.statSubtext}>Today</Text>
-        </View>
+            {/* Weekly Progress Chart */}
+            {weeklyProgress && chartData.length > 0 ? (
+              <WeeklyProgressChart
+                data={chartData}
+                completedCount={weeklyProgress.total_completed}
+                frozenCount={weeklyProgress.total_frozen}
+              />
+            ) : (
+              <View style={styles.card}>
+                <Text style={styles.cardTitle}>Weekly progress</Text>
+                <View style={styles.emptyState}>
+                  <Text style={styles.emptyText}>
+                    Chart will appear when you start logging habits
+                  </Text>
+                </View>
+              </View>
+            )}
 
-        <View style={styles.statCard}>
-          <View style={styles.statHeader}>
-            <Ionicons name="trending-up" size={24} color="#4DABF7" />
-            <Text style={styles.statTitle}>Completion Rate</Text>
-          </View>
-          <Text style={styles.statValue}>{todaysLoading ? "-" : `${completionRate}%`}</Text>
-          <Text style={styles.statSubtext}>Today</Text>
-        </View>
-
-        <View style={styles.statCard}>
-          <View style={styles.statHeader}>
-            <Ionicons name="star" size={24} color="#FFD43B" />
-            <Text style={styles.statTitle}>Total Points</Text>
-          </View>
-          <Text style={styles.statValue}>{weeklyLoading ? "-" : totalPoints}</Text>
-          <Text style={styles.statSubtext}>This week</Text>
-        </View>
-
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Weekly Progress</Text>
-          <Text style={styles.placeholder}>Chart showing weekly progress will appear here</Text>
-        </View>
-
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Habit Breakdown</Text>
-          <Text style={styles.placeholder}>Individual habit statistics will appear here</Text>
-        </View>
+            {/* Habit Breakdown */}
+            <View style={styles.card}>
+              <Text style={styles.cardTitle}>Habit breakdown</Text>
+              {habitBreakdown && habitBreakdown.habits.length > 0 ? (
+                <View style={styles.breakdownList}>
+                  {habitBreakdown.habits.map((habit) => (
+                    <HabitBreakdownRow
+                      key={habit.habit_id}
+                      iconName={habit.icon_name}
+                      habitName={habit.name}
+                      completedCount={habit.completed_count}
+                      totalDue={habit.due_count}
+                    />
+                  ))}
+                </View>
+              ) : (
+                <View style={styles.emptyState}>
+                  <Text style={styles.emptyText}>
+                    Individual habit statistics will appear here
+                  </Text>
+                </View>
+              )}
+            </View>
+          </>
+        )}
       </View>
     </ScrollView>
   );
@@ -82,54 +137,58 @@ export default function Statistics() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#f5f5f5",
+    backgroundColor: Colors.background,
   },
   content: {
     padding: 16,
   },
-  statCard: {
-    backgroundColor: "#fff",
-    borderRadius: 12,
-    padding: 20,
-    marginBottom: 12,
+  rangeSelector: {
+    marginBottom: 16,
   },
-  statHeader: {
+  metricGrid: {
     flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "space-between",
+    gap: 8,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
     alignItems: "center",
-    marginBottom: 12,
+    paddingVertical: 60,
   },
-  statTitle: {
-    fontSize: 16,
-    fontWeight: "500",
-    color: "#666",
-    marginLeft: 8,
-  },
-  statValue: {
-    fontSize: 32,
-    fontWeight: "bold",
-    color: "#333",
-    marginBottom: 4,
-  },
-  statSubtext: {
-    fontSize: 14,
-    color: "#999",
-  },
-  section: {
-    backgroundColor: "#fff",
-    borderRadius: 12,
+  card: {
+    backgroundColor: Colors.surface,
+    borderRadius: 16,
     padding: 20,
-    marginTop: 4,
-    marginBottom: 12,
+    marginBottom: 16,
+    shadowColor: Colors.textPrimary,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.06,
+    shadowRadius: 3,
+    elevation: 2,
   },
-  sectionTitle: {
+  cardTitle: {
     fontSize: 18,
     fontWeight: "600",
-    color: "#333",
-    marginBottom: 12,
+    color: Colors.textPrimary,
+    marginBottom: 16,
   },
-  placeholder: {
+  breakdownList: {
+    gap: 0,
+  },
+  emptyState: {
+    borderWidth: 1,
+    borderColor: Colors.border,
+    borderStyle: "dashed",
+    borderRadius: 12,
+    padding: 32,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  emptyText: {
     fontSize: 14,
-    color: "#999",
-    fontStyle: "italic",
+    color: Colors.textMuted,
+    textAlign: "center",
   },
 });

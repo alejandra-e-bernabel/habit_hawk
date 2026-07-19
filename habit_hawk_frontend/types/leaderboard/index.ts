@@ -6,6 +6,10 @@ export interface LeaderboardEntry {
   rank: number;
   user_id: number;
   username: string;
+  first_name?: string;
+  last_name?: string;
+  profile_icon_name?: string;
+  profile_image_url?: string;
   total_score: number;
   is_current_user: boolean;
 }

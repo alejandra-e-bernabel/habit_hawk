@@ -1,5 +1,6 @@
 import React from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
+import { Colors } from "@/constants/Colors";
 
 interface SegmentedControlProps<T extends string> {
   options: { label: string; value: T }[];
@@ -43,21 +44,21 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: "#ddd",
-    backgroundColor: "#fff",
+    borderColor: Colors.border,
+    backgroundColor: Colors.white,
     marginRight: 8,
     marginBottom: 8,
   },
   chipSelected: {
-    backgroundColor: "#007AFF",
-    borderColor: "#007AFF",
+    backgroundColor: Colors.primary,
+    borderColor: Colors.primary,
   },
   chipText: {
     fontSize: 14,
-    color: "#333",
+    color: Colors.textPrimary,
   },
   chipTextSelected: {
-    color: "#fff",
+    color: Colors.white,
     fontWeight: "600",
   },
 });

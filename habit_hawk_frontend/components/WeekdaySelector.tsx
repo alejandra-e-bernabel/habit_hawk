@@ -1,5 +1,6 @@
 import React from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
+import { Colors } from "@/constants/Colors";
 
 const WEEKDAY_LABELS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
@@ -46,21 +47,21 @@ const styles = StyleSheet.create({
     height: 42,
     borderRadius: 21,
     borderWidth: 1,
-    borderColor: "#ddd",
-    backgroundColor: "#fff",
+    borderColor: Colors.border,
+    backgroundColor: Colors.white,
     justifyContent: "center",
     alignItems: "center",
   },
   dayChipSelected: {
-    backgroundColor: "#007AFF",
-    borderColor: "#007AFF",
+    backgroundColor: Colors.primary,
+    borderColor: Colors.primary,
   },
   dayText: {
     fontSize: 12,
-    color: "#333",
+    color: Colors.textPrimary,
   },
   dayTextSelected: {
-    color: "#fff",
+    color: Colors.white,
     fontWeight: "600",
   },
 });

@@ -9,7 +9,9 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
+import { Colors } from "@/constants/Colors";
 import useGetTodaysHabits from "@/hooks/habits/useGetTodaysHabits";
+import { HabitPeriod } from "@/types/habits";
 
 const TodayGoals = () => {
   const router = useRouter();
@@ -22,7 +24,7 @@ const TodayGoals = () => {
           <Text style={styles.title}>Today&apos;s Goals</Text>
         </View>
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#4F5FD6" />
+          <ActivityIndicator size="large" color={Colors.primary} />
         </View>
       </View>
     );
@@ -54,19 +56,19 @@ const TodayGoals = () => {
           onPress={() => router.push("/(tabs)/habits")}
         >
           <Text style={styles.viewAllText}>View All</Text>
-          <Ionicons name="chevron-forward" size={16} color="#fff" />
+          <Ionicons name="chevron-forward-outline" size={16} color={Colors.white} />
         </TouchableOpacity>
       </View>
 
       {habits.length === 0 ? (
         <View style={styles.emptyContainer}>
-          <Ionicons name="checkbox-outline" size={48} color="#999" />
+          <Ionicons name="checkbox-outline" size={48} color={Colors.textSecondary} />
           <Text style={styles.emptyText}>No goals for today</Text>
           <TouchableOpacity
             style={styles.createButton}
             onPress={() => router.push("/(tabs)/habits")}
           >
-            <Ionicons name="add-circle" size={20} color="#4F5FD6" />
+            <Ionicons name="add-circle-outline" size={20} color={Colors.primary} />
             <Text style={styles.createButtonText}>Create Your First Goal</Text>
           </TouchableOpacity>
         </View>
@@ -98,23 +100,23 @@ const TodayGoals = () => {
                 key={habit.habit_id}
                 style={[
                   styles.goalCard,
-                  habit.is_completed && styles.goalCardCompleted,
+                  habit.is_period_goal_met && styles.goalCardCompleted,
                 ]}
                 onPress={() => router.push(`/(tabs)/habits/${habit.habit_id}`)}
               >
                 <View style={styles.goalCardHeader}>
-                  {habit.is_completed ? (
-                    <Ionicons name="checkmark-circle" size={24} color="#51CF66" />
+                  {habit.is_period_goal_met ? (
+                    <Ionicons name="checkmark-circle-outline" size={24} color={Colors.success} />
                   ) : (
                     <Ionicons
                       name="ellipse-outline"
                       size={24}
-                      color="#999"
+                      color={Colors.textSecondary}
                     />
                   )}
                   {habit.current_streak > 0 && (
                     <View style={styles.streakBadge}>
-                      <Ionicons name="flame" size={14} color="#FF6B6B" />
+                      <Ionicons name="flame-outline" size={14} color={Colors.error} />
                       <Text style={styles.streakText}>{habit.current_streak}</Text>
                     </View>
                   )}
@@ -122,13 +124,23 @@ const TodayGoals = () => {
                 <Text
                   style={[
                     styles.goalName,
-                    habit.is_completed && styles.goalNameCompleted,
+                    habit.is_period_goal_met && styles.goalNameCompleted,
                   ]}
                   numberOfLines={2}
                 >
                   {habit.name}
                 </Text>
-                {habit.target_duration_minutes && (
+                {habit.period === HabitPeriod.WEEKLY && (
+                  <Text style={styles.goalDetail}>
+                    {habit.weekly_completed_count || 0} of {habit.target_count} this week
+                  </Text>
+                )}
+                {habit.period === HabitPeriod.MONTHLY && (
+                  <Text style={styles.goalDetail}>
+                    {habit.monthly_completed ? "Completed this month" : `Due in ${habit.monthly_days_until_due || 0}d`}
+                  </Text>
+                )}
+                {habit.period === HabitPeriod.DAILY && habit.target_duration_minutes && (
                   <Text style={styles.goalDetail}>
                     {habit.target_duration_minutes} min
                   </Text>
@@ -144,7 +156,7 @@ const TodayGoals = () => {
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: "#4F5FD6",
+    backgroundColor: Colors.primary,
     borderRadius: 16,
     padding: 20,
     marginBottom: 16,
@@ -158,7 +170,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 22,
     fontWeight: "bold",
-    color: "#fff",
+    color: Colors.white,
   },
   viewAllButton: {
     flexDirection: "row",
@@ -166,7 +178,7 @@ const styles = StyleSheet.create({
   },
   viewAllText: {
     fontSize: 14,
-    color: "#fff",
+    color: Colors.white,
     marginRight: 4,
     opacity: 0.9,
   },
@@ -179,7 +191,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   errorText: {
-    color: "#fff",
+    color: Colors.white,
     fontSize: 14,
     opacity: 0.8,
   },
@@ -188,7 +200,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   emptyText: {
-    color: "#fff",
+    color: Colors.white,
     fontSize: 16,
     marginTop: 12,
     marginBottom: 16,
@@ -197,13 +209,13 @@ const styles = StyleSheet.create({
   createButton: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#fff",
+    backgroundColor: Colors.white,
     paddingHorizontal: 16,
     paddingVertical: 10,
     borderRadius: 20,
   },
   createButtonText: {
-    color: "#4F5FD6",
+    color: Colors.primary,
     fontSize: 14,
     fontWeight: "600",
     marginLeft: 6,
@@ -220,19 +232,19 @@ const styles = StyleSheet.create({
   },
   progressBarFill: {
     height: "100%",
-    backgroundColor: "#51CF66",
+    backgroundColor: Colors.success,
     borderRadius: 4,
   },
   progressText: {
     fontSize: 12,
-    color: "#fff",
+    color: Colors.white,
     opacity: 0.9,
   },
   scrollContent: {
     paddingRight: 16,
   },
   goalCard: {
-    backgroundColor: "#fff",
+    backgroundColor: Colors.white,
     borderRadius: 12,
     padding: 16,
     marginRight: 12,
@@ -258,23 +270,23 @@ const styles = StyleSheet.create({
   },
   streakText: {
     fontSize: 12,
-    color: "#FF6B6B",
+    color: Colors.error,
     fontWeight: "600",
     marginLeft: 2,
   },
   goalName: {
     fontSize: 16,
     fontWeight: "600",
-    color: "#333",
+    color: Colors.textPrimary,
     marginBottom: 8,
   },
   goalNameCompleted: {
     textDecorationLine: "line-through",
-    color: "#999",
+    color: Colors.textSecondary,
   },
   goalDetail: {
     fontSize: 12,
-    color: "#666",
+    color: Colors.textSecondary,
   },
 });
 

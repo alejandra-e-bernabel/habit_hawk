@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import {
   ActivityIndicator,
   KeyboardAvoidingView,
+  Modal,
   Platform,
   ScrollView,
   StyleSheet,
@@ -12,16 +13,23 @@ import {
 import { Link } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
+import { Ionicons } from "@expo/vector-icons";
 
 import { AppText } from "@/components/AppText";
 import { COLORS, FONTS } from "@/constants/theme";
 import { useAuth } from "@/hooks/useAuth";
 import { ApiError } from "@/services/api";
+import ProfileIconSelector from "@/components/ProfileIconSelector";
+import { getUserProfileIconByName } from "@/constants/UserProfileIcons";
 
 export default function Register() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [selectedIcon, setSelectedIcon] = useState<string | null>(null);
+  const [showIconSelector, setShowIconSelector] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
 
   const { register, isLoading, clearError } = useAuth();
@@ -59,7 +67,7 @@ export default function Register() {
     }
 
     try {
-      await register(trimmedUsername, password);
+      await register(trimmedUsername, password, firstName.trim() || undefined, lastName.trim() || undefined, selectedIcon || undefined);
     } catch (error) {
       if (error instanceof ApiError) {
         setFormError(error.detail);
@@ -110,8 +118,70 @@ export default function Register() {
             </AppText>
 
             <AppText style={styles.formSubtitle}>
-              Enter your username and password to sign up
+              Create your account
             </AppText>
+
+            <TextInput
+              style={styles.input}
+              placeholder="First Name (Optional)"
+              placeholderTextColor={COLORS.placeholder}
+              value={firstName}
+              onChangeText={(value) => {
+                setFirstName(value);
+                clearFormError();
+              }}
+              autoCapitalize="words"
+              autoCorrect={false}
+              editable={!isLoading}
+            />
+
+            <TextInput
+              style={styles.input}
+              placeholder="Last Name (Optional)"
+              placeholderTextColor={COLORS.placeholder}
+              value={lastName}
+              onChangeText={(value) => {
+                setLastName(value);
+                clearFormError();
+              }}
+              autoCapitalize="words"
+              autoCorrect={false}
+              editable={!isLoading}
+            />
+
+            <TouchableOpacity
+              style={styles.iconButton}
+              onPress={() => setShowIconSelector(true)}
+              disabled={isLoading}
+            >
+              <View style={styles.iconButtonContent}>
+                {selectedIcon ? (
+                  <>
+                    <View style={[styles.selectedIconPreview, { backgroundColor: getUserProfileIconByName(selectedIcon).backgroundColor }]}>
+                      <Ionicons
+                        name={getUserProfileIconByName(selectedIcon).ionicon as any}
+                        size={20}
+                        color={getUserProfileIconByName(selectedIcon).iconColor}
+                      />
+                    </View>
+                    <AppText style={styles.iconButtonText}>
+                      {getUserProfileIconByName(selectedIcon).label}
+                    </AppText>
+                  </>
+                ) : (
+                  <>
+                    <Ionicons
+                      name="person-circle-outline"
+                      size={24}
+                      color={COLORS.placeholder}
+                    />
+                    <AppText style={styles.iconButtonTextPlaceholder}>
+                      Choose Profile Icon (Optional)
+                    </AppText>
+                  </>
+                )}
+              </View>
+            </TouchableOpacity>
 
             <TextInput
               style={styles.input}
@@ -217,6 +287,33 @@ export default function Register() {
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
+
+      <Modal
+        visible={showIconSelector}
+        animationType="slide"
+        presentationStyle="pageSheet"
+      >
+        <SafeAreaView style={styles.modalContainer}>
+          <View style={styles.modalHeader}>
+            <AppText weight="semiBold" style={styles.modalTitle}>
+              Choose Profile Icon
+            </AppText>
+            <TouchableOpacity
+              onPress={() => setShowIconSelector(false)}
+              style={styles.modalCloseButton}
+            >
+              <Ionicons name="close" size={28} color={COLORS.heading} />
+            </TouchableOpacity>
+          </View>
+          <ProfileIconSelector
+            selectedIcon={selectedIcon}
+            onSelectIcon={(iconName) => {
+              setSelectedIcon(iconName);
+              setShowIconSelector(false);
+            }}
+          />
+        </SafeAreaView>
+      </Modal>
     </View>
   );
 }
@@ -347,5 +444,56 @@ const styles = StyleSheet.create({
   accountLink: {
     color: COLORS.primary,
     fontSize: 18,
+  },
+  iconButton: {
+    width: "100%",
+    height: 51,
+    marginBottom: 20,
+    paddingHorizontal: 16,
+    borderWidth: 1,
+    borderColor: COLORS.inputBorder,
+    borderRadius: 8,
+    backgroundColor: COLORS.inputBackground,
+    justifyContent: "center",
+  },
+  iconButtonContent: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+  },
+  iconButtonText: {
+    color: COLORS.heading,
+    fontSize: 14,
+    fontFamily: FONTS.regular,
+  },
+  iconButtonTextPlaceholder: {
+    color: COLORS.placeholder,
+    fontSize: 14,
+    fontFamily: FONTS.regular,
+  },
+  modalContainer: {
+    flex: 1,
+    backgroundColor: COLORS.background,
+    padding: 16,
+  },
+  modalHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 20,
+  },
+  modalTitle: {
+    fontSize: 20,
+    color: COLORS.heading,
+  },
+  modalCloseButton: {
+    padding: 4,
+  },
+  selectedIconPreview: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });

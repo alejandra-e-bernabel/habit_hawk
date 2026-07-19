@@ -11,7 +11,12 @@ import type {
   HabitLogCreate,
   HabitLogUpdate,
   HabitLogResponse,
+  HabitStatsResponse,
   TodayHabitsResponse,
+  StatisticsOverviewResponse,
+  WeeklyProgressResponse,
+  HabitBreakdownResponse,
+  StatisticsRange,
 } from "@/types/habits";
 
 const TOKEN_KEY = "@habit_hawk_token";
@@ -200,4 +205,74 @@ export async function getTodaysHabits(): Promise<TodayHabitsResponse> {
       Authorization: `Bearer ${token}`,
     },
   });
+}
+
+/**
+ * Get comprehensive statistics for a habit
+ */
+export async function getHabitStats(habitId: number): Promise<HabitStatsResponse> {
+  const token = await getToken();
+
+  return await apiFetch<HabitStatsResponse>(`/habits/${habitId}/stats`, {
+    method: "GET",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+}
+
+// ==============================
+// Statistics Page Operations
+// ==============================
+
+/**
+ * Get statistics overview for the selected range
+ */
+export async function getStatisticsOverview(
+  range: StatisticsRange
+): Promise<StatisticsOverviewResponse> {
+  const token = await getToken();
+
+  return await apiFetch<StatisticsOverviewResponse>(
+    `/habits/statistics/overview?range=${range}`,
+    {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
+}
+
+/**
+ * Get weekly progress chart data
+ */
+export async function getWeeklyProgress(): Promise<WeeklyProgressResponse> {
+  const token = await getToken();
+
+  return await apiFetch<WeeklyProgressResponse>("/habits/statistics/weekly-progress", {
+    method: "GET",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+}
+
+/**
+ * Get habit breakdown for the selected range
+ */
+export async function getHabitBreakdown(
+  range: StatisticsRange
+): Promise<HabitBreakdownResponse> {
+  const token = await getToken();
+
+  return await apiFetch<HabitBreakdownResponse>(
+    `/habits/statistics/breakdown?range=${range}`,
+    {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
 }

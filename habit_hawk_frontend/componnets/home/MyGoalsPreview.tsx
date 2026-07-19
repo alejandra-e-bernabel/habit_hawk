@@ -9,6 +9,7 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
+import { Colors } from "@/constants/Colors";
 import useGetAllHabits from "@/hooks/habits/useGetAllHabits";
 import { HabitStatus } from "@/types/habits";
 
@@ -23,7 +24,7 @@ const MyGoalsPreview = () => {
           <Text style={styles.title}>My Goals</Text>
         </View>
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#4F5FD6" />
+          <ActivityIndicator size="large" color={Colors.primary} />
         </View>
       </View>
     );
@@ -53,13 +54,13 @@ const MyGoalsPreview = () => {
   const getStatusIcon = (status: HabitStatus) => {
     switch (status) {
       case HabitStatus.COMPLETED:
-        return { name: "checkmark-circle" as const, color: "#51CF66" };
+        return { name: "checkmark-circle-outline" as const, color: Colors.success };
       case HabitStatus.IN_PROGRESS:
-        return { name: "time" as const, color: "#4F5FD6" };
+        return { name: "time-outline" as const, color: Colors.primary };
       case HabitStatus.PAUSED:
-        return { name: "pause-circle" as const, color: "#FFA94D" };
+        return { name: "pause-circle-outline" as const, color: Colors.warning };
       default:
-        return { name: "ellipse-outline" as const, color: "#999" };
+        return { name: "ellipse-outline" as const, color: Colors.textSecondary };
     }
   };
 
@@ -86,20 +87,20 @@ const MyGoalsPreview = () => {
             onPress={() => router.push("/(tabs)/habits")}
           >
             <Text style={styles.pastGoalsText}>Past Goals</Text>
-            <Ionicons name="chevron-forward" size={16} color="#4F5FD6" />
+            <Ionicons name="chevron-forward-outline" size={16} color={Colors.primary} />
           </TouchableOpacity>
         )}
       </View>
 
       {activeHabits.length === 0 ? (
         <View style={styles.emptyContainer}>
-          <Ionicons name="flag-outline" size={48} color="#999" />
+          <Ionicons name="flag-outline" size={48} color={Colors.textSecondary} />
           <Text style={styles.emptyText}>No active goals yet</Text>
           <TouchableOpacity
             style={styles.createButton}
             onPress={() => router.push("/(tabs)/habits")}
           >
-            <Ionicons name="add-circle" size={20} color="#fff" />
+            <Ionicons name="add-circle-outline" size={20} color={Colors.white} />
             <Text style={styles.createButtonText}>Create Goal</Text>
           </TouchableOpacity>
         </View>
@@ -141,7 +142,7 @@ const MyGoalsPreview = () => {
                       </View>
                     </View>
                   </View>
-                  <Ionicons name="chevron-forward" size={20} color="#999" />
+                  <Ionicons name="chevron-forward-outline" size={20} color={Colors.textSecondary} />
                 </TouchableOpacity>
               );
             }}
@@ -153,7 +154,7 @@ const MyGoalsPreview = () => {
             style={styles.createGoalCard}
             onPress={() => router.push("/(tabs)/habits")}
           >
-            <Ionicons name="add-circle-outline" size={32} color="#4F5FD6" />
+            <Ionicons name="add-circle-outline" size={32} color={Colors.primary} />
             <Text style={styles.createGoalText}>Create Goal</Text>
           </TouchableOpacity>
         </>
@@ -164,7 +165,7 @@ const MyGoalsPreview = () => {
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: "#fff",
+    backgroundColor: Colors.white,
     borderRadius: 16,
     padding: 20,
     marginBottom: 16,
@@ -183,7 +184,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 20,
     fontWeight: "bold",
-    color: "#333",
+    color: Colors.textPrimary,
   },
   pastGoalsButton: {
     flexDirection: "row",
@@ -191,7 +192,7 @@ const styles = StyleSheet.create({
   },
   pastGoalsText: {
     fontSize: 14,
-    color: "#4F5FD6",
+    color: Colors.primary,
     marginRight: 4,
     fontWeight: "600",
   },
@@ -204,7 +205,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   errorText: {
-    color: "#FF6B6B",
+    color: Colors.error,
     fontSize: 14,
   },
   emptyContainer: {
@@ -213,20 +214,20 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     fontSize: 16,
-    color: "#666",
+    color: Colors.textSecondary,
     marginTop: 12,
     marginBottom: 16,
   },
   createButton: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#4F5FD6",
+    backgroundColor: Colors.primary,
     paddingHorizontal: 20,
     paddingVertical: 12,
     borderRadius: 24,
   },
   createButtonText: {
-    color: "#fff",
+    color: Colors.white,
     fontSize: 14,
     fontWeight: "600",
     marginLeft: 8,
@@ -249,12 +250,12 @@ const styles = StyleSheet.create({
   goalName: {
     fontSize: 16,
     fontWeight: "600",
-    color: "#333",
+    color: Colors.textPrimary,
     marginBottom: 4,
   },
   goalMotivation: {
     fontSize: 14,
-    color: "#666",
+    color: Colors.textSecondary,
     marginBottom: 4,
   },
   goalMeta: {
@@ -263,16 +264,16 @@ const styles = StyleSheet.create({
   },
   goalMetaText: {
     fontSize: 12,
-    color: "#999",
+    color: Colors.textSecondary,
   },
   goalMetaDot: {
     fontSize: 12,
-    color: "#999",
+    color: Colors.textSecondary,
     marginHorizontal: 6,
   },
   separator: {
     height: 1,
-    backgroundColor: "#F0F0F0",
+    backgroundColor: Colors.border,
     marginVertical: 8,
   },
   createGoalCard: {
@@ -282,13 +283,13 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     marginTop: 8,
     borderWidth: 2,
-    borderColor: "#E0E4FF",
+    borderColor: Colors.borderLight,
     borderStyle: "dashed",
     borderRadius: 12,
   },
   createGoalText: {
     fontSize: 16,
-    color: "#4F5FD6",
+    color: Colors.primary,
     fontWeight: "600",
     marginLeft: 8,
   },

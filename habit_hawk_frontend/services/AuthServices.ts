@@ -39,11 +39,17 @@ export async function login(
  */
 export async function register(
   username: string,
-  password: string
+  password: string,
+  firstName?: string,
+  lastName?: string,
+  profileIconName?: string
 ): Promise<TokenResponse> {
   const registration: RegisterRequest = {
     username,
     password,
+    first_name: firstName,
+    last_name: lastName,
+    profile_icon_name: profileIconName,
   };
 
   const response = await apiFetch<TokenResponse>("/auth/register", {

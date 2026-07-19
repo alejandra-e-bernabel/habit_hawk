@@ -119,14 +119,14 @@ export default function EditHabit() {
           presentation: "modal",
           headerLeft: () => (
             <TouchableOpacity onPress={() => router.back()}>
-              <Ionicons name="close" size={28} color="#007AFF" />
+              <Ionicons name="close-outline" size={28} color="Colors.primary" />
             </TouchableOpacity>
           ),
         }}
       />
       {fetchLoading ? (
         <View style={styles.centered}>
-          <ActivityIndicator size="large" color="#007AFF" />
+          <ActivityIndicator size="large" color="Colors.primary" />
         </View>
       ) : fetchError || !habit ? (
         <View style={styles.centered}>
@@ -258,7 +258,7 @@ const styles = StyleSheet.create({
   button: {
     width: "100%",
     height: 50,
-    backgroundColor: "#007AFF",
+    backgroundColor: "Colors.primary",
     borderRadius: 8,
     justifyContent: "center",
     alignItems: "center",

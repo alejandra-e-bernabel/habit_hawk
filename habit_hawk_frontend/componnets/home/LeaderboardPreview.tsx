@@ -9,6 +9,7 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
+import { Colors } from "@/constants/Colors";
 import useGetWeeklyLeaderboard from "@/hooks/leaderboard/useGetWeeklyLeaderboard";
 import useGetWeeklyStats from "@/hooks/leaderboard/useGetWeeklyStats";
 
@@ -26,7 +27,7 @@ const LeaderboardPreview = () => {
           <Text style={styles.title}>Weekly Leaderboard</Text>
         </View>
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#4F5FD6" />
+          <ActivityIndicator size="large" color={Colors.primary} />
         </View>
       </View>
     );
@@ -59,7 +60,7 @@ const LeaderboardPreview = () => {
           onPress={() => router.push("/(tabs)/leaderboard")}
         >
           <Text style={styles.viewAllText}>View All</Text>
-          <Ionicons name="chevron-forward" size={16} color="#4F5FD6" />
+          <Ionicons name="chevron-forward-outline" size={16} color={Colors.primary} />
         </TouchableOpacity>
       </View>
 
@@ -81,7 +82,7 @@ const LeaderboardPreview = () => {
 
       {topEntries.length === 0 ? (
         <View style={styles.emptyContainer}>
-          <Ionicons name="trophy-outline" size={48} color="#999" />
+          <Ionicons name="trophy-outline" size={48} color={Colors.textSecondary} />
           <Text style={styles.emptyText}>No leaderboard entries yet</Text>
           <Text style={styles.emptySubtext}>
             Complete habits to earn points and climb the leaderboard!
@@ -100,13 +101,13 @@ const LeaderboardPreview = () => {
             >
               <View style={styles.rankContainer}>
                 {index === 0 && (
-                  <Ionicons name="trophy" size={20} color="#FFD700" />
+                  <Ionicons name="trophy-outline" size={20} color="#FFD700" />
                 )}
                 {index === 1 && (
-                  <Ionicons name="trophy" size={20} color="#C0C0C0" />
+                  <Ionicons name="trophy-outline" size={20} color="#C0C0C0" />
                 )}
                 {index === 2 && (
-                  <Ionicons name="trophy" size={20} color="#CD7F32" />
+                  <Ionicons name="trophy-outline" size={20} color="#CD7F32" />
                 )}
                 {index > 2 && (
                   <Text style={styles.rankText}>#{item.rank}</Text>
@@ -139,7 +140,7 @@ const LeaderboardPreview = () => {
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: "#fff",
+    backgroundColor: Colors.white,
     borderRadius: 16,
     padding: 20,
     marginBottom: 16,
@@ -158,11 +159,11 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 20,
     fontWeight: "bold",
-    color: "#333",
+    color: Colors.textPrimary,
   },
   subtitle: {
     fontSize: 12,
-    color: "#666",
+    color: Colors.textSecondary,
     marginTop: 4,
   },
   viewAllButton: {
@@ -171,7 +172,7 @@ const styles = StyleSheet.create({
   },
   viewAllText: {
     fontSize: 14,
-    color: "#4F5FD6",
+    color: Colors.primary,
     marginRight: 4,
     fontWeight: "600",
   },
@@ -181,12 +182,12 @@ const styles = StyleSheet.create({
   },
   userStatsCard: {
     flexDirection: "row",
-    backgroundColor: "#F8F9FF",
+    backgroundColor: Colors.primaryLightest,
     borderRadius: 12,
     padding: 16,
     marginBottom: 16,
     borderWidth: 1,
-    borderColor: "#E0E4FF",
+    borderColor: Colors.borderLight,
   },
   userStatsLeft: {
     flex: 1,
@@ -198,18 +199,18 @@ const styles = StyleSheet.create({
   },
   divider: {
     width: 1,
-    backgroundColor: "#E0E4FF",
+    backgroundColor: Colors.borderLight,
     marginHorizontal: 16,
   },
   userStatsLabel: {
     fontSize: 12,
-    color: "#666",
+    color: Colors.textSecondary,
     marginBottom: 4,
   },
   userStatsValue: {
     fontSize: 24,
     fontWeight: "bold",
-    color: "#4F5FD6",
+    color: Colors.primary,
   },
   emptyContainer: {
     paddingVertical: 40,
@@ -217,13 +218,13 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     fontSize: 16,
-    color: "#333",
+    color: Colors.textPrimary,
     marginTop: 12,
     fontWeight: "600",
   },
   emptySubtext: {
     fontSize: 14,
-    color: "#666",
+    color: Colors.textSecondary,
     marginTop: 8,
     textAlign: "center",
     paddingHorizontal: 20,
@@ -237,9 +238,9 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   leaderboardRowHighlight: {
-    backgroundColor: "#F8F9FF",
+    backgroundColor: Colors.primaryLightest,
     borderWidth: 1,
-    borderColor: "#4F5FD6",
+    borderColor: Colors.primary,
   },
   rankContainer: {
     width: 32,
@@ -249,19 +250,19 @@ const styles = StyleSheet.create({
   rankText: {
     fontSize: 16,
     fontWeight: "600",
-    color: "#666",
+    color: Colors.textSecondary,
   },
   userInfo: {
     flex: 1,
   },
   username: {
     fontSize: 16,
-    color: "#333",
+    color: Colors.textPrimary,
     fontWeight: "500",
   },
   usernameHighlight: {
     fontWeight: "700",
-    color: "#4F5FD6",
+    color: Colors.primary,
   },
   scoreContainer: {
     alignItems: "flex-end",
@@ -269,11 +270,11 @@ const styles = StyleSheet.create({
   scoreText: {
     fontSize: 18,
     fontWeight: "700",
-    color: "#333",
+    color: Colors.textPrimary,
   },
   scoreLabel: {
     fontSize: 12,
-    color: "#666",
+    color: Colors.textSecondary,
     marginTop: 2,
   },
 });

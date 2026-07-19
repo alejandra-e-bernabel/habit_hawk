@@ -1,6 +1,8 @@
 import React, { useState } from "react";
-import { View, StyleSheet, ScrollView } from "react-native";
-import { useFocusEffect } from "expo-router";
+import { View, StyleSheet, ScrollView, TouchableOpacity } from "react-native";
+import { useFocusEffect, router } from "expo-router";
+import { Ionicons } from "@expo/vector-icons";
+import { Colors } from "@/constants/Colors";
 import TodayGoals from "@/componnets/home/TodayGoals";
 import LeaderboardPreview from "@/componnets/home/LeaderboardPreview";
 import MyGoalsPreview from "@/componnets/home/MyGoalsPreview";
@@ -28,6 +30,15 @@ export default function Home() {
         <LeaderboardPreview />
         <MyGoalsPreview />
       </ScrollView>
+
+      {/* Floating Action Button */}
+      <TouchableOpacity
+        style={styles.fab}
+        onPress={() => router.push("/add-habit")}
+        activeOpacity={0.8}
+      >
+        <Ionicons name="add-outline" size={28} color={Colors.white} />
+      </TouchableOpacity>
     </View>
   );
 }
@@ -43,5 +54,22 @@ const styles = StyleSheet.create({
   content: {
     padding: 16,
     paddingTop: 8,
+    paddingBottom: 100, // Extra space for FAB
+  },
+  fab: {
+    position: "absolute",
+    bottom: 20,
+    right: 20,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: Colors.primary,
+    justifyContent: "center",
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
   },
 });

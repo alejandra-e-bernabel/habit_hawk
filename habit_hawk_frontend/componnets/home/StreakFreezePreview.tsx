@@ -9,6 +9,7 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter, useFocusEffect } from "expo-router";
+import { Colors } from "@/constants/Colors";
 
 import useGetFreezeInventory from "@/hooks/freezes/useGetFreezeInventory";
 import useGetFreezeProgress from "@/hooks/freezes/useGetFreezeProgress";
@@ -39,7 +40,7 @@ const StreakFreezePreview = () => {
           <Text style={styles.title}>Streak Freezes</Text>
         </View>
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#4F5FD6" />
+          <ActivityIndicator size="large" color={Colors.primary} />
         </View>
       </View>
     );
@@ -71,7 +72,7 @@ const StreakFreezePreview = () => {
           style={styles.summaryPill}
           onPress={() => router.push("/(tabs)/habits")}
         >
-          <Ionicons name="snow-outline" size={16} color="#4F5FD6" />
+          <Ionicons name="snow-outline" size={16} color={Colors.primary} />
           <Text style={styles.summaryPillText}>
             {inventory?.available_count || 0} available
           </Text>
@@ -129,7 +130,6 @@ const StreakFreezePreview = () => {
                 <Text style={styles.progressFooterText}>
                   {item.freezes_earned_count} freeze{item.freezes_earned_count === 1 ? "" : "s"} earned by this habit
                 </Text>
-                <Text style={styles.detailsLink}>Use the detail screen to apply a freeze</Text>
               </View>
             </View>
           );
@@ -143,7 +143,7 @@ const StreakFreezePreview = () => {
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: "#fff",
+    backgroundColor: Colors.white,
     borderRadius: 16,
     padding: 20,
     marginBottom: 16,
@@ -162,26 +162,26 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 20,
     fontWeight: "bold",
-    color: "#333",
+    color: Colors.textPrimary,
   },
   subtitle: {
     fontSize: 12,
-    color: "#666",
+    color: Colors.textSecondary,
     marginTop: 4,
   },
   summaryPill: {
     flexDirection: "row",
     alignItems: "center",
     gap: 6,
-    backgroundColor: "#F8F9FF",
-    borderColor: "#E0E4FF",
+    backgroundColor: Colors.primaryLightest,
+    borderColor: Colors.borderLight,
     borderWidth: 1,
     borderRadius: 999,
     paddingHorizontal: 12,
     paddingVertical: 8,
   },
   summaryPillText: {
-    color: "#4F5FD6",
+    color: Colors.primary,
     fontWeight: "600",
     fontSize: 13,
   },
@@ -192,21 +192,21 @@ const styles = StyleSheet.create({
   },
   summaryCard: {
     flex: 1,
-    backgroundColor: "#F8F9FF",
+    backgroundColor: Colors.primaryLightest,
     borderRadius: 12,
     padding: 12,
     borderWidth: 1,
-    borderColor: "#E0E4FF",
+    borderColor: Colors.borderLight,
   },
   summaryLabel: {
     fontSize: 12,
-    color: "#666",
+    color: Colors.textSecondary,
     marginBottom: 4,
   },
   summaryValue: {
     fontSize: 22,
     fontWeight: "700",
-    color: "#4F5FD6",
+    color: Colors.primary,
   },
   loadingContainer: {
     paddingVertical: 40,
@@ -217,15 +217,15 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   errorText: {
-    color: "#FF6B6B",
+    color: Colors.error,
     fontSize: 14,
   },
   habitCard: {
-    backgroundColor: "#FBFBFF",
+    backgroundColor: Colors.background,
     borderRadius: 12,
     padding: 14,
     borderWidth: 1,
-    borderColor: "#EEF1FF",
+    borderColor: Colors.borderLight,
   },
   habitCardHeader: {
     flexDirection: "row",
@@ -240,33 +240,33 @@ const styles = StyleSheet.create({
   habitName: {
     fontSize: 16,
     fontWeight: "700",
-    color: "#222",
+    color: Colors.textPrimary,
   },
   habitMeta: {
     marginTop: 4,
     fontSize: 12,
-    color: "#666",
+    color: Colors.textSecondary,
   },
   detailsButton: {
-    backgroundColor: "#4F5FD6",
+    backgroundColor: Colors.primary,
     paddingHorizontal: 12,
     paddingVertical: 8,
     borderRadius: 999,
   },
   applyButtonText: {
-    color: "#fff",
+    color: Colors.white,
     fontSize: 12,
     fontWeight: "700",
   },
   progressBarBackground: {
     height: 8,
-    backgroundColor: "#E5E7F5",
+    backgroundColor: Colors.border,
     borderRadius: 999,
     overflow: "hidden",
   },
   progressBarFill: {
     height: "100%",
-    backgroundColor: "#51CF66",
+    backgroundColor: Colors.success,
     borderRadius: 999,
   },
   progressFooter: {
@@ -277,13 +277,13 @@ const styles = StyleSheet.create({
   },
   progressFooterText: {
     fontSize: 12,
-    color: "#666",
+    color: Colors.textSecondary,
     flex: 1,
     paddingRight: 12,
   },
   detailsLink: {
     fontSize: 12,
-    color: "#4F5FD6",
+    color: Colors.primary,
     fontWeight: "700",
   },
   separator: {

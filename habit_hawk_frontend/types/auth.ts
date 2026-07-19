@@ -11,6 +11,9 @@ export interface RegisterRequest {
   username: string;
   password: string;
   timezone?: string;
+  first_name?: string;
+  last_name?: string;
+  profile_icon_name?: string;
 }
 
 export interface TokenResponse {
@@ -22,6 +25,10 @@ export interface UserResponse {
   user_id: number;
   username: string;
   timezone: string;
+  first_name?: string;
+  last_name?: string;
+  profile_icon_name?: string;
+  profile_image_url?: string;
 }
 
 export interface AuthError {

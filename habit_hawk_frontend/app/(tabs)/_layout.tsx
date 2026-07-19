@@ -3,29 +3,30 @@ import React from "react";
 import { Tabs, router } from "expo-router";
 import { TouchableOpacity } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { Colors } from "@/constants/Colors";
 
 export default function TabLayout() {
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: "#007AFF",
-        tabBarInactiveTintColor: "#8E8E93",
+        tabBarActiveTintColor: Colors.primary,
+        tabBarInactiveTintColor: Colors.textSecondary,
         tabBarStyle: {
-          backgroundColor: "#fff",
+          backgroundColor: Colors.white,
           borderTopWidth: 1,
-          borderTopColor: "#E5E5EA",
-          height: 60,
-          paddingBottom: 8,
+          borderTopColor: Colors.border,
+          height: 80,
+          paddingBottom: 10,
           paddingTop: 8,
         },
         tabBarLabelStyle: {
-          fontSize: 12,
+          fontSize: 11,
           fontWeight: "500",
         },
         headerStyle: {
-          backgroundColor: "#007AFF",
+          backgroundColor: Colors.primary,
         },
-        headerTintColor: "#fff",
+        headerTintColor: Colors.white,
         headerTitleStyle: {
           fontWeight: "600",
         },
@@ -34,7 +35,7 @@ export default function TabLayout() {
             onPress={() => router.push("/settings")}
             style={{ marginRight: 16 }}
           >
-            <Ionicons name="settings-outline" size={24} color="#fff" />
+            <Ionicons name="settings-outline" size={24} color={Colors.white} />
           </TouchableOpacity>
         ),
       }}
@@ -44,7 +45,7 @@ export default function TabLayout() {
         options={{
           title: "Home",
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="home" size={size} color={color} />
+            <Ionicons name="home-outline" size={size} color={color} />
           ),
         }}
       />
@@ -53,7 +54,7 @@ export default function TabLayout() {
         options={{
           title: "Habits",
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="checkmark-circle" size={size} color={color} />
+            <Ionicons name="checkmark-circle-outline" size={size} color={color} />
           ),
         }}
       />
@@ -62,7 +63,7 @@ export default function TabLayout() {
         options={{
           title: "Leaderboard",
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="trophy" size={size} color={color} />
+            <Ionicons name="trophy-outline" size={size} color={color} />
           ),
         }}
       />
@@ -71,7 +72,7 @@ export default function TabLayout() {
         options={{
           title: "Store",
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="cart" size={size} color={color} />
+            <Ionicons name="cart-outline" size={size} color={color} />
           ),
         }}
       />
@@ -80,7 +81,7 @@ export default function TabLayout() {
         options={{
           title: "Statistics",
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="stats-chart" size={size} color={color} />
+            <Ionicons name="stats-chart-outline" size={size} color={color} />
           ),
         }}
       />
