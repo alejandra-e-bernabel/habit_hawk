@@ -4,7 +4,7 @@ from datetime import date, datetime, time, timedelta
 from typing import Tuple
 
 import pytz
-from sqlalchemy import and_, func, or_
+from sqlalchemy import and_, case, func, or_
 from sqlalchemy.orm import Session
 
 from database.models import Friendship, FriendshipStatus, HabitLog, User
@@ -67,7 +67,7 @@ def calculate_weekly_leaderboard(
     # Get friend user IDs (both directions of friendship)
     friend_ids_subquery = db.query(
         func.distinct(
-            func.case(
+            case(
                 (Friendship.requester_id == current_user.user_id, Friendship.addressee_id),
                 else_=Friendship.requester_id
             )
@@ -91,6 +91,10 @@ def calculate_weekly_leaderboard(
     scores = db.query(
         HabitLog.user_id,
         User.username,
+        User.first_name,
+        User.last_name,
+        User.profile_icon_name,
+        User.profile_image_url,
         func.sum(HabitLog.score_earned).label("total_score")
     ).join(
         User, HabitLog.user_id == User.user_id
@@ -101,18 +105,23 @@ def calculate_weekly_leaderboard(
             HabitLog.logged_for_date <= week_end_utc.date()
         )
     ).group_by(
-        HabitLog.user_id, User.username
+        HabitLog.user_id, User.username, User.first_name, User.last_name,
+        User.profile_icon_name, User.profile_image_url
     ).order_by(
         func.sum(HabitLog.score_earned).desc()
     ).all()
 
     # Build leaderboard entries with ranks
     entries = []
-    for rank, (user_id, username, total_score) in enumerate(scores, start=1):
+    for rank, (user_id, username, first_name, last_name, profile_icon_name, profile_image_url, total_score) in enumerate(scores, start=1):
         entries.append(LeaderboardEntry(
             rank=rank,
             user_id=user_id,
             username=username,
+            first_name=first_name,
+            last_name=last_name,
+            profile_icon_name=profile_icon_name,
+            profile_image_url=profile_image_url,
             total_score=total_score or 0,
             is_current_user=(user_id == current_user.user_id)
         ))
@@ -127,6 +136,10 @@ def calculate_weekly_leaderboard(
                     rank=len(entries) + 1,
                     user_id=user.user_id,
                     username=user.username,
+                    first_name=user.first_name,
+                    last_name=user.last_name,
+                    profile_icon_name=user.profile_icon_name,
+                    profile_image_url=user.profile_image_url,
                     total_score=0,
                     is_current_user=(user_id == current_user.user_id)
                 ))

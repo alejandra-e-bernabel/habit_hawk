@@ -17,9 +17,13 @@ from habit.crud import (
     get_all_habits,
     get_habit_by_id,
     get_habit_logs,
+    get_habit_stats,
     get_todays_habits,
     update_habit,
     update_habit_log,
+    get_statistics_overview,
+    get_weekly_progress,
+    get_habit_breakdown,
 )
 from habit.schemas import (
     HabitCreate,
@@ -27,8 +31,12 @@ from habit.schemas import (
     HabitLogResponse,
     HabitLogUpdate,
     HabitResponse,
+    HabitStatsResponse,
     HabitUpdate,
     TodayHabitsResponse,
+    StatisticsOverviewResponse,
+    WeeklyProgressResponse,
+    HabitBreakdownResponse,
 )
 
 router = APIRouter(prefix="/habits", tags=["Habits"])
@@ -232,3 +240,70 @@ def get_single_habit(
     Requires a valid JWT token in the Authorization header.
     """
     return get_habit_by_id(db, habit_id, current_user.user_id)
+
+
+@router.get("/{habit_id}/stats", response_model=HabitStatsResponse)
+def get_stats(
+    habit_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """
+    Get comprehensive statistics for a habit.
+
+    Returns completion rates, duration stats, ratings, and streak information.
+    Only the owner of the habit can view its stats.
+    Requires a valid JWT token in the Authorization header.
+    """
+    return get_habit_stats(db, habit_id, current_user)
+
+
+# ---------------------------------------------------------------------------
+# Statistics Page Endpoints
+# ---------------------------------------------------------------------------
+
+
+@router.get("/statistics/overview", response_model=StatisticsOverviewResponse)
+def statistics_overview(
+    range: str = Query("week", description="Range: week, month, or all_time"),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """
+    Get statistics overview for the selected range.
+
+    Returns aggregated metrics: streak, points, completion rate, completed count.
+    Current streak is always live (not range-dependent).
+    Requires a valid JWT token in the Authorization header.
+    """
+    return get_statistics_overview(db, current_user, range)
+
+
+@router.get("/statistics/weekly-progress", response_model=WeeklyProgressResponse)
+def weekly_progress(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """
+    Get weekly progress chart data (Monday to Sunday of current week).
+
+    Returns daily completed and frozen counts for the chart.
+    Requires a valid JWT token in the Authorization header.
+    """
+    return get_weekly_progress(db, current_user)
+
+
+@router.get("/statistics/breakdown", response_model=HabitBreakdownResponse)
+def habit_breakdown(
+    range: str = Query("week", description="Range: week, month, or all_time"),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """
+    Get per-habit breakdown for the selected range.
+
+    Returns each habit's completion count, due count, and completion rate.
+    Sorted by completion rate descending.
+    Requires a valid JWT token in the Authorization header.
+    """
+    return get_habit_breakdown(db, current_user, range)

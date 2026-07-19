@@ -110,6 +110,11 @@ class User(Base):
     # IANA timezone name, e.g. "America/New_York" — drives the Monday-00:00-local
     # leaderboard week boundary. Store the name, not a UTC offset, so DST is free.
     timezone: Mapped[str] = mapped_column(String(64), default="UTC")
+    # Profile information
+    first_name: Mapped[str | None] = mapped_column(String(100))
+    last_name: Mapped[str | None] = mapped_column(String(100))
+    profile_icon_name: Mapped[str | None] = mapped_column(String(50))  # from icon library
+    profile_image_url: Mapped[str | None] = mapped_column(String(500))  # for future upload feature
     created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
 
     habits: Mapped[list["Habit"]] = relationship(
@@ -143,6 +148,7 @@ class Habit(Base):
 
     name: Mapped[str] = mapped_column(String(120))
     motivation_note: Mapped[str | None] = mapped_column(String(1000))  # the "why"
+    icon_name: Mapped[str | None] = mapped_column(String(50))  # icon identifier for UI
 
     status: Mapped[HabitStatus] = mapped_column(
         Enum(HabitStatus, name="habit_status"), default=HabitStatus.in_progress
@@ -234,6 +240,10 @@ class HabitLog(Base):
     started_at: Mapped[datetime | None] = mapped_column(DateTime)
     ended_at: Mapped[datetime | None] = mapped_column(DateTime)
     duration_minutes: Mapped[int | None] = mapped_column(Integer)
+
+    # optional feedback/journaling
+    note: Mapped[str | None] = mapped_column(String(2000))
+    session_rating: Mapped[int | None] = mapped_column(Integer)  # 1-5 stars
 
     # leaderboard score (the pool that never gets spent)
     score_earned: Mapped[int] = mapped_column(Integer, default=0)

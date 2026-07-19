@@ -12,6 +12,10 @@ class LeaderboardEntry(BaseModel):
     rank: int
     user_id: int
     username: str
+    first_name: str | None = None
+    last_name: str | None = None
+    profile_icon_name: str | None = None
+    profile_image_url: str | None = None
     total_score: int
     is_current_user: bool = False
 

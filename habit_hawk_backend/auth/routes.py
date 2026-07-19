@@ -9,9 +9,11 @@ from auth.crud import (
     create_user,
     get_current_user,
     get_user_by_username,
+    update_user_profile,
 )
 from auth.schemas import (
     LoginRequest,
+    ProfileUpdateRequest,
     RegisterRequest,
     TokenResponse,
     UserResponse,
@@ -38,6 +40,9 @@ def register(
         username=registration.username,
         password=registration.password,
         timezone_name=registration.timezone,
+        first_name=registration.first_name,
+        last_name=registration.last_name,
+        profile_icon_name=registration.profile_icon_name,
     )
 
     access_token = create_access_token(data={"sub": user.username})
@@ -76,3 +81,29 @@ async def get_current_user_info(current_user: User = Depends(get_current_user)):
     Use this to verify your token is working correctly.
     """
     return current_user
+
+
+@router.put("/profile", response_model=UserResponse)
+async def update_profile(
+    profile_update: ProfileUpdateRequest,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """
+    Update the current user's profile information.
+
+    Allows updating:
+    - first_name
+    - last_name
+    - profile_icon_name
+
+    Returns the updated user information.
+    """
+    updated_user = update_user_profile(
+        db=db,
+        user=current_user,
+        first_name=profile_update.first_name,
+        last_name=profile_update.last_name,
+        profile_icon_name=profile_update.profile_icon_name,
+    )
+    return updated_user

@@ -40,12 +40,18 @@ def create_user(
     username: str,
     password: str,
     timezone_name: str = "America/New_York",
+    first_name: str | None = None,
+    last_name: str | None = None,
+    profile_icon_name: str | None = None,
 ) -> User:
     """Create and persist a new user with a hashed password"""
     user = User(
         username=username,
         password_hash=get_password_hash(password),
         timezone=timezone_name,
+        first_name=first_name,
+        last_name=last_name,
+        profile_icon_name=profile_icon_name,
     )
 
     db.add(user)
@@ -80,6 +86,26 @@ def authenticate_user(db: Session, username: str, password: str) -> Optional[Use
         return None
     if not verify_password(password, user.password_hash):
         return None
+    return user
+
+
+def update_user_profile(
+    db: Session,
+    user: User,
+    first_name: str | None = None,
+    last_name: str | None = None,
+    profile_icon_name: str | None = None,
+) -> User:
+    """Update user profile information."""
+    if first_name is not None:
+        user.first_name = first_name
+    if last_name is not None:
+        user.last_name = last_name
+    if profile_icon_name is not None:
+        user.profile_icon_name = profile_icon_name
+
+    db.commit()
+    db.refresh(user)
     return user
 
 
