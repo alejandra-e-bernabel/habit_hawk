@@ -233,6 +233,10 @@ def get_friends_list(db: Session, current_user: User) -> list[FriendListItem]:
             friendship_id=friendship.friendship_id,
             user_id=friend_user.user_id,
             username=friend_user.username,
+            first_name=friend_user.first_name,
+            last_name=friend_user.last_name,
+            profile_icon_name=friend_user.profile_icon_name,
+            profile_image_url=friend_user.profile_image_url,
             since=friendship.responded_at or friendship.created_at
         ))
 

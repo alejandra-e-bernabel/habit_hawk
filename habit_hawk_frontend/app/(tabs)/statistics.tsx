@@ -32,12 +32,24 @@ export default function Statistics() {
 
   // Transform weekly progress data for the chart
   const chartData: DayProgress[] =
-    weeklyProgress?.days.map((day) => ({
-      day: day.day_name,
-      count: day.completed_count,
-      isToday: day.is_today,
-      isFuture: false, // Computed from date comparison if needed
-    })) ?? [];
+    weeklyProgress?.days.map((day) => {
+      const dayDate = new Date(day.date);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      dayDate.setHours(0, 0, 0, 0);
+      const isFuture = dayDate > today;
+
+      return {
+        day: day.day_name,
+        count: day.completed_count,
+        isToday: day.is_today,
+        isFuture,
+      };
+    }) ?? [];
+
+  // Debug logging
+  console.log("Weekly Progress Data:", weeklyProgress);
+  console.log("Chart Data:", chartData);
 
   return (
     <ScrollView key={refreshKey} style={styles.container}>

@@ -78,15 +78,18 @@ export default function Settings() {
         options={{
           title: "Settings",
           presentation: "modal",
-          headerLeft: () => (
-            <TouchableOpacity onPress={() => router.back()}>
-              <Ionicons name="close-outline" size={28} color="Colors.primary" />
-            </TouchableOpacity>
-          ),
+          headerShown: false,
         }}
       />
-      <ScrollView style={styles.container}>
-        <View style={styles.content}>
+      <View style={styles.container}>
+        <View style={styles.header}>
+          <Text style={styles.headerTitle}>Settings</Text>
+          <TouchableOpacity onPress={() => router.back()} style={styles.closeButton}>
+            <Ionicons name="close-outline" size={28} color={Colors.primary} />
+          </TouchableOpacity>
+        </View>
+        <ScrollView style={styles.scrollView}>
+          <View style={styles.content}>
           {/* User Profile Preview */}
           {user && (
             <View style={styles.profileSection}>
@@ -149,6 +152,7 @@ export default function Settings() {
           <Text style={styles.version}>Version 1.0.0</Text>
         </View>
       </ScrollView>
+      </View>
     </>
   );
 }
@@ -157,6 +161,28 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#f5f5f5",
+  },
+  header: {
+    backgroundColor: Colors.card,
+    paddingHorizontal: 16,
+    paddingTop: 16,
+    paddingBottom: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.border,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  headerTitle: {
+    fontSize: 24,
+    fontWeight: "700",
+    color: Colors.textPrimary,
+  },
+  closeButton: {
+    padding: 4,
+  },
+  scrollView: {
+    flex: 1,
   },
   content: {
     padding: 16,

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, forwardRef, useImperativeHandle } from "react";
 import {
   View,
   Text,
@@ -11,6 +11,7 @@ import {
   Animated,
   Alert,
 } from "react-native";
+import DateTimePicker from "@react-native-community/datetimepicker";
 import { Ionicons } from "@expo/vector-icons";
 import { HabitType, HabitPeriod } from "@/types/habits";
 import ProgressBar from "./ProgressBar";
@@ -24,6 +25,10 @@ interface CreateHabitStepsProps {
   loading?: boolean;
 }
 
+export interface CreateHabitStepsRef {
+  handleCancel: () => void;
+}
+
 export interface HabitFormData {
   name: string;
   motivation_note?: string | null;
@@ -34,13 +39,14 @@ export interface HabitFormData {
   target_duration_minutes?: number | null;
   started_on?: string | null;
   schedule_days?: number[] | null;
+  reminders?: Array<{ remind_at: string; is_enabled: boolean }> | null;
 }
 
-const CreateHabitSteps: React.FC<CreateHabitStepsProps> = ({
+const CreateHabitSteps = forwardRef<CreateHabitStepsRef, CreateHabitStepsProps>(({
   onComplete,
   onCancel,
   loading = false,
-}) => {
+}, ref) => {
   const [currentStep, setCurrentStep] = useState(1);
   const [slideAnim] = useState(new Animated.Value(0));
 
@@ -54,8 +60,52 @@ const CreateHabitSteps: React.FC<CreateHabitStepsProps> = ({
   const [durationMinutes, setDurationMinutes] = useState("");
   const [scheduleDays, setScheduleDays] = useState<number[]>([]);
   const [startDate, setStartDate] = useState("");
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+  const [reminders, setReminders] = useState<Array<{ remind_at: string; is_enabled: boolean }>>([]);
+  const [showTimePicker, setShowTimePicker] = useState(false);
+  const [activeReminderIndex, setActiveReminderIndex] = useState<number | null>(null);
 
-  const totalSteps = habitType === HabitType.LOG ? 7 : 6;
+  const totalSteps = 6;
+
+  const handleCancel = () => {
+    // Check if user has entered any data
+    const hasData =
+      name.trim() ||
+      motivationNote.trim() ||
+      iconName !== null ||
+      habitType !== HabitType.REMINDER ||
+      period !== HabitPeriod.DAILY ||
+      targetCount !== "1" ||
+      durationMinutes.trim() ||
+      scheduleDays.length > 0 ||
+      startDate.trim() ||
+      reminders.length > 0;
+
+    if (hasData) {
+      Alert.alert(
+        "Discard Changes?",
+        "Are you sure you want to cancel? Your progress will be lost.",
+        [
+          {
+            text: "Keep Editing",
+            style: "cancel",
+          },
+          {
+            text: "Discard",
+            style: "destructive",
+            onPress: onCancel,
+          },
+        ]
+      );
+    } else {
+      onCancel();
+    }
+  };
+
+  useImperativeHandle(ref, () => ({
+    handleCancel,
+  }));
 
   const animateTransition = (direction: "next" | "back") => {
     const toValue = direction === "next" ? -50 : 50;
@@ -86,56 +136,12 @@ const CreateHabitSteps: React.FC<CreateHabitStepsProps> = ({
     }
 
     animateTransition("next");
-    if (currentStep === 5 && habitType === HabitType.REMINDER) {
-      // Skip duration step for reminder type
-      setCurrentStep(6);
-    } else {
-      setCurrentStep(currentStep + 1);
-    }
+    setCurrentStep(currentStep + 1);
   };
 
   const handleBack = () => {
     animateTransition("back");
-    if (currentStep === 6 && habitType === HabitType.REMINDER) {
-      // Skip duration step when going back
-      setCurrentStep(4);
-    } else {
-      setCurrentStep(currentStep - 1);
-    }
-  };
-
-  const handleCancel = () => {
-    // Check if user has entered any data
-    const hasData =
-      name.trim() ||
-      motivationNote.trim() ||
-      iconName !== null ||
-      habitType !== HabitType.REMINDER ||
-      period !== HabitPeriod.DAILY ||
-      targetCount !== "1" ||
-      durationMinutes.trim() ||
-      scheduleDays.length > 0 ||
-      startDate.trim();
-
-    if (hasData) {
-      Alert.alert(
-        "Discard Changes?",
-        "Are you sure you want to cancel? Your progress will be lost.",
-        [
-          {
-            text: "Keep Editing",
-            style: "cancel",
-          },
-          {
-            text: "Discard",
-            style: "destructive",
-            onPress: onCancel,
-          },
-        ]
-      );
-    } else {
-      onCancel();
-    }
+    setCurrentStep(currentStep - 1);
   };
 
   const handleSubmit = () => {
@@ -152,8 +158,31 @@ const CreateHabitSteps: React.FC<CreateHabitStepsProps> = ({
           : null,
       started_on: startDate.trim() || null,
       schedule_days: scheduleDays.length > 0 ? scheduleDays : null,
+      reminders: reminders.length > 0 ? reminders : null,
     };
     onComplete(data);
+  };
+
+  const handleDateChange = (event: any, date?: Date) => {
+    setShowDatePicker(Platform.OS === "ios");
+    if (date) {
+      setSelectedDate(date);
+      const formattedDate = date.toISOString().split("T")[0];
+      setStartDate(formattedDate);
+    }
+  };
+
+  const handleTimeChange = (event: any, time?: Date) => {
+    setShowTimePicker(Platform.OS === "ios");
+    if (time && activeReminderIndex !== null) {
+      const hours = time.getHours().toString().padStart(2, "0");
+      const minutes = time.getMinutes().toString().padStart(2, "0");
+      const timeString = `${hours}:${minutes}`;
+      const updated = [...reminders];
+      updated[activeReminderIndex].remind_at = timeString;
+      setReminders(updated);
+      setActiveReminderIndex(null);
+    }
   };
 
   const frequencyLabel = (p: HabitPeriod) => {
@@ -224,7 +253,7 @@ const CreateHabitSteps: React.FC<CreateHabitStepsProps> = ({
 
         {currentStep === 3 && (
           <View style={styles.stepContent}>
-            <Text style={styles.stepIcon}>📊</Text>
+            <Ionicons name="stats-chart-outline" size={64} color={Colors.primary} style={styles.stepIconMargin} />
             <Text style={styles.stepQuestion}>
               How do you want to track it?
             </Text>
@@ -248,7 +277,7 @@ const CreateHabitSteps: React.FC<CreateHabitStepsProps> = ({
               <View style={styles.cardContent}>
                 <Text style={styles.cardTitle}>Simple Reminder</Text>
                 <Text style={styles.cardDescription}>
-                  Just mark it complete when done. Perfect for quick habits.
+                  Mark it complete when done.
                 </Text>
               </View>
               {habitType === HabitType.REMINDER && (
@@ -273,19 +302,34 @@ const CreateHabitSteps: React.FC<CreateHabitStepsProps> = ({
               <View style={styles.cardContent}>
                 <Text style={styles.cardTitle}>Timed Session</Text>
                 <Text style={styles.cardDescription}>
-                  Track duration with a built-in timer. Great for focused activities.
+                  Track duration with a timer.
                 </Text>
               </View>
               {habitType === HabitType.LOG && (
                 <Ionicons name="checkmark-circle-outline" size={24} color={Colors.primary} />
               )}
             </TouchableOpacity>
+
+            {habitType === HabitType.LOG && (
+              <View style={styles.conditionalField}>
+                <Text style={styles.label}>Target duration (minutes):</Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder="e.g., 30"
+                  value={durationMinutes}
+                  onChangeText={setDurationMinutes}
+                  keyboardType="number-pad"
+                  maxLength={4}
+                />
+                <Text style={styles.helperSmall}>Optional - set a target duration</Text>
+              </View>
+            )}
           </View>
         )}
 
         {currentStep === 4 && (
           <View style={styles.stepContent}>
-            <Text style={styles.stepIcon}>📅</Text>
+            <Ionicons name="calendar-outline" size={64} color={Colors.primary} style={styles.stepIconMargin} />
             <Text style={styles.stepQuestion}>How often will you do this?</Text>
 
             <View style={styles.periodSelector}>
@@ -333,38 +377,78 @@ const CreateHabitSteps: React.FC<CreateHabitStepsProps> = ({
           </View>
         )}
 
-        {currentStep === 5 && habitType === HabitType.LOG && (
+        {currentStep === 5 && (
           <View style={styles.stepContent}>
-            <Ionicons name="timer-outline" size={64} color={Colors.primary} style={styles.stepIconMargin} />
+            <Ionicons name="alarm-outline" size={64} color={Colors.primary} style={styles.stepIconMargin} />
             <Text style={styles.stepQuestion}>
-              How long should each session be?
+              When should we remind you?
             </Text>
-            <Text style={styles.helper}>
-              This is optional - you can set a target duration
-            </Text>
+            <Text style={styles.helper}>Optional</Text>
 
-            <TextInput
-              style={styles.largeInput}
-              placeholder="e.g., 30"
-              value={durationMinutes}
-              onChangeText={setDurationMinutes}
-              keyboardType="number-pad"
-              maxLength={4}
-            />
-            <Text style={styles.helperSmall}>minutes per session</Text>
+            <View style={styles.remindersList}>
+              {reminders.map((reminder, index) => (
+                <View key={index} style={styles.reminderRow}>
+                  <Ionicons name="time-outline" size={24} color={Colors.primary} />
+                  <TouchableOpacity
+                    style={styles.reminderInput}
+                    onPress={() => {
+                      setActiveReminderIndex(index);
+                      setShowTimePicker(true);
+                    }}
+                  >
+                    <Text style={[styles.reminderInputText, !reminder.remind_at && styles.reminderInputPlaceholder]}>
+                      {reminder.remind_at || "Select time"}
+                    </Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    onPress={() => {
+                      const updated = [...reminders];
+                      updated[index].is_enabled = !updated[index].is_enabled;
+                      setReminders(updated);
+                    }}
+                  >
+                    <Ionicons
+                      name={reminder.is_enabled ? "toggle" : "toggle-outline"}
+                      size={32}
+                      color={reminder.is_enabled ? Colors.primary : Colors.textSecondary}
+                    />
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    onPress={() => {
+                      setReminders(reminders.filter((_, i) => i !== index));
+                    }}
+                  >
+                    <Ionicons name="close-circle-outline" size={24} color={Colors.error} />
+                  </TouchableOpacity>
+                </View>
+              ))}
+            </View>
+
+            {showTimePicker && (
+              <DateTimePicker
+                value={new Date()}
+                mode="time"
+                is24Hour={false}
+                display={Platform.OS === "ios" ? "spinner" : "default"}
+                onChange={handleTimeChange}
+              />
+            )}
 
             <TouchableOpacity
-              style={styles.skipButton}
-              onPress={() => setDurationMinutes("")}
+              style={styles.addReminderButton}
+              onPress={() => {
+                setReminders([...reminders, { remind_at: "", is_enabled: true }]);
+              }}
             >
-              <Text style={styles.skipButtonText}>Skip - I'll track manually</Text>
+              <Ionicons name="add-outline" size={20} color={Colors.primary} />
+              <Text style={styles.addReminderText}>Add reminder</Text>
             </TouchableOpacity>
           </View>
         )}
 
-        {currentStep === (habitType === HabitType.LOG ? 6 : 6) && (
+        {currentStep === 6 && (
           <View style={styles.stepContent}>
-            <Text style={styles.stepIcon}>📆</Text>
+            <Ionicons name="calendar-number-outline" size={64} color={Colors.primary} style={styles.stepIconMargin} />
             <Text style={styles.stepQuestion}>
               Which days will you do this?
             </Text>
@@ -383,77 +467,41 @@ const CreateHabitSteps: React.FC<CreateHabitStepsProps> = ({
             <Text style={styles.label}>
               Start date (optional):
             </Text>
-            <TextInput
-              style={styles.input}
-              placeholder="YYYY-MM-DD"
-              value={startDate}
-              onChangeText={setStartDate}
-              maxLength={10}
-            />
-            <Text style={styles.helperSmall}>
-              Leave blank to start today
-            </Text>
+            <TouchableOpacity
+              style={styles.datePickerButton}
+              onPress={() => setShowDatePicker(true)}
+            >
+              <Ionicons name="calendar-outline" size={20} color={Colors.primary} />
+              <Text style={[styles.datePickerText, !startDate && styles.datePickerPlaceholder]}>
+                {startDate ? new Date(startDate).toLocaleDateString() : "Select start date"}
+              </Text>
+            </TouchableOpacity>
+            {startDate && (
+              <TouchableOpacity
+                onPress={() => setStartDate("")}
+                style={styles.clearDateButton}
+              >
+                <Text style={styles.clearDateText}>Clear date (start today)</Text>
+              </TouchableOpacity>
+            )}
+            {showDatePicker && (
+              <DateTimePicker
+                value={startDate ? new Date(startDate) : selectedDate}
+                mode="date"
+                display={Platform.OS === "ios" ? "spinner" : "default"}
+                onChange={handleDateChange}
+              />
+            )}
           </View>
         )}
 
-        {currentStep === (habitType === HabitType.LOG ? 7 : 7) && (
-          <View style={styles.stepContent}>
-            <Ionicons name="checkmark-circle-outline" size={64} color={Colors.success} style={styles.stepIconMargin} />
-            <Text style={styles.stepQuestion}>Review your habit</Text>
-
-            <View style={styles.reviewCard}>
-              <View style={styles.reviewRow}>
-                <Text style={styles.reviewLabel}>Name:</Text>
-                <Text style={styles.reviewValue}>{name}</Text>
-              </View>
-              {motivationNote && (
-                <View style={styles.reviewRow}>
-                  <Text style={styles.reviewLabel}>Why:</Text>
-                  <Text style={styles.reviewValue}>{motivationNote}</Text>
-                </View>
-              )}
-              <View style={styles.reviewRow}>
-                <Text style={styles.reviewLabel}>Type:</Text>
-                <Text style={styles.reviewValue}>
-                  {habitType === HabitType.REMINDER ? "Simple Reminder" : "Timed Session"}
-                </Text>
-              </View>
-              <View style={styles.reviewRow}>
-                <Text style={styles.reviewLabel}>Frequency:</Text>
-                <Text style={styles.reviewValue}>
-                  {targetCount} time{parseInt(targetCount) > 1 ? "s" : ""} {frequencyLabel(period)}
-                </Text>
-              </View>
-              {habitType === HabitType.LOG && durationMinutes && (
-                <View style={styles.reviewRow}>
-                  <Text style={styles.reviewLabel}>Duration:</Text>
-                  <Text style={styles.reviewValue}>{durationMinutes} minutes</Text>
-                </View>
-              )}
-              {scheduleDays.length > 0 && (
-                <View style={styles.reviewRow}>
-                  <Text style={styles.reviewLabel}>Days:</Text>
-                  <Text style={styles.reviewValue}>
-                    {scheduleDays.length} day{scheduleDays.length > 1 ? "s" : ""} selected
-                  </Text>
-                </View>
-              )}
-            </View>
-
-            <Text style={styles.helperCenter}>
-              Ready to start building this habit?
-            </Text>
-          </View>
-        )}
       </Animated.View>
     );
 
     return stepContent;
   };
 
-  const isLastStep =
-    currentStep === (habitType === HabitType.LOG ? 7 : 7) ||
-    (currentStep === 6 && habitType === HabitType.REMINDER);
+  const isLastStep = currentStep === 6;
 
   const canProceed = () => {
     if (currentStep === 1) return name.trim().length > 0;
@@ -495,7 +543,7 @@ const CreateHabitSteps: React.FC<CreateHabitStepsProps> = ({
             onPress={handleCancel}
             disabled={loading}
           >
-            <Ionicons name="close-outline" size={20} color={Colors.error} />
+            <Ionicons name="close-outline" size={20} color={Colors.textSecondary} />
             <Text style={styles.cancelButtonText}>Cancel</Text>
           </TouchableOpacity>
         )}
@@ -508,17 +556,26 @@ const CreateHabitSteps: React.FC<CreateHabitStepsProps> = ({
           onPress={isLastStep ? handleSubmit : handleNext}
           disabled={!canProceed() || loading}
         >
-          <Text style={styles.nextButtonText}>
+          <Text style={[
+            styles.nextButtonText,
+            (!canProceed() || loading) && styles.nextButtonTextDisabled,
+          ]}>
             {loading ? "Creating..." : isLastStep ? "Create Habit" : "Next"}
           </Text>
           {!loading && !isLastStep && (
-            <Ionicons name="arrow-forward-outline" size={20} color={Colors.white} />
+            <Ionicons
+              name="arrow-forward-outline"
+              size={20}
+              color={(!canProceed() || loading) ? Colors.textTertiary : Colors.white}
+            />
           )}
         </TouchableOpacity>
       </View>
     </KeyboardAvoidingView>
   );
-};
+});
+
+CreateHabitSteps.displayName = "CreateHabitSteps";
 
 const styles = StyleSheet.create({
   container: {
@@ -734,15 +791,15 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     paddingHorizontal: 24,
     borderRadius: 12,
-    borderWidth: 2,
-    borderColor: Colors.error,
+    borderWidth: 1,
+    borderColor: Colors.border,
     backgroundColor: Colors.white,
     gap: 8,
   },
   cancelButtonText: {
     fontSize: 16,
     fontWeight: "600",
-    color: Colors.error,
+    color: Colors.textSecondary,
   },
   nextButton: {
     flex: 1,
@@ -756,12 +813,101 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   nextButtonDisabled: {
-    opacity: 0.5,
+    backgroundColor: Colors.primaryLightest,
   },
   nextButtonText: {
     fontSize: 16,
     fontWeight: "700",
     color: Colors.white,
+  },
+  nextButtonTextDisabled: {
+    color: Colors.textTertiary,
+  },
+  conditionalField: {
+    width: "100%",
+    marginTop: 24,
+    paddingTop: 24,
+    borderTopWidth: 1,
+    borderTopColor: Colors.border,
+  },
+  remindersList: {
+    width: "100%",
+    marginBottom: 16,
+  },
+  reminderRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: Colors.white,
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    gap: 12,
+  },
+  reminderInput: {
+    flex: 1,
+    fontSize: 16,
+    color: Colors.textPrimary,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    borderRadius: 8,
+    padding: 10,
+    backgroundColor: Colors.white,
+    justifyContent: "center",
+  },
+  reminderInputText: {
+    fontSize: 16,
+    color: Colors.textPrimary,
+  },
+  reminderInputPlaceholder: {
+    color: Colors.textTertiary,
+  },
+  addReminderButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 14,
+    paddingHorizontal: 20,
+    borderRadius: 10,
+    borderWidth: 2,
+    borderColor: Colors.primary,
+    borderStyle: "dashed",
+    backgroundColor: Colors.white,
+    gap: 8,
+    marginTop: 8,
+  },
+  addReminderText: {
+    fontSize: 15,
+    fontWeight: "600",
+    color: Colors.primary,
+  },
+  datePickerButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: Colors.white,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    borderRadius: 10,
+    padding: 14,
+    marginBottom: 12,
+    gap: 12,
+  },
+  datePickerText: {
+    fontSize: 16,
+    color: Colors.textPrimary,
+  },
+  datePickerPlaceholder: {
+    color: Colors.textTertiary,
+  },
+  clearDateButton: {
+    alignSelf: "flex-start",
+    marginBottom: 12,
+  },
+  clearDateText: {
+    fontSize: 14,
+    color: Colors.primary,
+    textDecorationLine: "underline",
   },
 });
 

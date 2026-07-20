@@ -95,7 +95,10 @@ const TodayGoals = () => {
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={styles.scrollContent}
           >
-            {habits.map((habit) => (
+            {[...habits].sort((a, b) => {
+              if (a.is_period_goal_met === b.is_period_goal_met) return 0;
+              return a.is_period_goal_met ? 1 : -1;
+            }).map((habit) => (
               <TouchableOpacity
                 key={habit.habit_id}
                 style={[

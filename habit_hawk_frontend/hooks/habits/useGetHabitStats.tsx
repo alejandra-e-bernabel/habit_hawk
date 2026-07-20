@@ -8,6 +8,13 @@ const useGetHabitStats = (habitId: number) => {
   const [error, setError] = useState<string | null>(null);
 
   const fetchStats = useCallback(async () => {
+    // Validate habitId before making API call
+    if (!habitId || isNaN(habitId) || habitId <= 0) {
+      setError("Invalid habit ID");
+      setLoading(false);
+      return;
+    }
+
     try {
       setLoading(true);
       setError(null);

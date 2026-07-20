@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, Alert } from "react-native";
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, Alert, Platform } from "react-native";
 import { useLocalSearchParams, useFocusEffect, router, Stack } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import useGetHabit from "@/hooks/habits/useGetHabit";
@@ -11,6 +11,7 @@ import useUpdateHabitLog from "@/hooks/habits/useUpdateHabitLog";
 import useGetFreezeInventory from "@/hooks/freezes/useGetFreezeInventory";
 import useGetFreezeProgress from "@/hooks/freezes/useGetFreezeProgress";
 import useApplyFreeze from "@/hooks/freezes/useApplyFreeze";
+import useDeleteHabit from "@/hooks/habits/useDeleteHabit";
 import HabitCalendar from "@/components/HabitCalendar";
 import SessionTimer from "@/components/SessionTimer";
 import SessionCompletionModal from "@/components/SessionCompletionModal";
@@ -22,6 +23,18 @@ import { Colors } from "@/constants/Colors";
 export default function HabitDetail() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const habitId = Number(id);
+
+  // Validate habitId is a valid number
+  if (!id || isNaN(habitId) || habitId <= 0) {
+    return (
+      <View style={styles.centered}>
+        <Ionicons name="alert-circle-outline" size={64} color={Colors.textMuted} />
+        <Text style={styles.emptyTitle}>Invalid Habit</Text>
+        <Text style={styles.emptyText}>The habit ID is invalid or missing</Text>
+      </View>
+    );
+  }
+
   const { habit, loading, error, refetch } = useGetHabit(habitId);
   const { todaysHabits, refetch: refetchTodaysHabits } = useGetTodaysHabits();
   const { logs, refetch: refetchLogs } = useGetHabitLogs(habitId);
@@ -39,6 +52,7 @@ export default function HabitDetail() {
     refetch: refetchProgress,
   } = useGetFreezeProgress();
   const { applyFreeze, loading: applyingFreeze } = useApplyFreeze();
+  const { deleteHabit, loading: deletingHabit } = useDeleteHabit();
 
   const [showCompletionModal, setShowCompletionModal] = useState(false);
   const [sessionDuration, setSessionDuration] = useState<number | undefined>(undefined);
@@ -154,6 +168,39 @@ export default function HabitDetail() {
       Alert.alert(
         "Couldn't Apply Freeze",
         err instanceof Error ? err.message : "Please try again"
+      );
+    }
+  };
+
+  const handleDeleteHabit = async () => {
+    if (!habit) {
+      return;
+    }
+
+    const confirmDelete = async () => {
+      try {
+        await deleteHabit(habit.habit_id);
+        router.back();
+      } catch (err) {
+        Alert.alert(
+          "Couldn't Delete Habit",
+          err instanceof Error ? err.message : "Please try again"
+        );
+      }
+    };
+
+    if (Platform.OS === "web") {
+      if (window.confirm(`Are you sure you want to delete "${habit.name}"? This action cannot be undone.`)) {
+        await confirmDelete();
+      }
+    } else {
+      Alert.alert(
+        "Delete Habit",
+        `Are you sure you want to delete "${habit.name}"? This action cannot be undone.`,
+        [
+          { text: "Cancel", style: "cancel" },
+          { text: "Delete", style: "destructive", onPress: confirmDelete },
+        ]
       );
     }
   };
@@ -554,6 +601,22 @@ export default function HabitDetail() {
           >
             <Ionicons name="create-outline" size={20} color={Colors.primary} />
             <Text style={styles.editButtonText}>Edit Habit</Text>
+          </TouchableOpacity>
+
+          {/* Delete Button */}
+          <TouchableOpacity
+            style={[styles.deleteButton, deletingHabit && styles.buttonDisabled]}
+            onPress={handleDeleteHabit}
+            disabled={deletingHabit}
+          >
+            {deletingHabit ? (
+              <ActivityIndicator color={Colors.error} />
+            ) : (
+              <>
+                <Ionicons name="trash-outline" size={20} color={Colors.error} />
+                <Text style={styles.deleteButtonText}>Delete Habit</Text>
+              </>
+            )}
           </TouchableOpacity>
         </View>
       </ScrollView>
@@ -958,6 +1021,23 @@ const styles = StyleSheet.create({
   },
   editButtonText: {
     color: Colors.primary,
+    fontSize: 16,
+    fontWeight: "600",
+  },
+  deleteButton: {
+    backgroundColor: Colors.white,
+    borderRadius: 12,
+    padding: 16,
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+    borderWidth: 2,
+    borderColor: Colors.error,
+    marginBottom: 32,
+    gap: 8,
+  },
+  deleteButtonText: {
+    color: Colors.error,
     fontSize: 16,
     fontWeight: "600",
   },

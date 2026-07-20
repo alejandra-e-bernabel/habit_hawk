@@ -32,5 +32,9 @@ export interface FriendListItem {
   friendship_id: number;
   user_id: number;
   username: string;
+  first_name?: string;
+  last_name?: string;
+  profile_icon_name?: string;
+  profile_image_url?: string;
   since: string; // ISO datetime string - when friendship was accepted
 }

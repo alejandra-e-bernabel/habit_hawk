@@ -44,6 +44,10 @@ class FriendListItem(BaseModel):
     friendship_id: int
     user_id: int
     username: str
+    first_name: Optional[str] = None
+    last_name: Optional[str] = None
+    profile_icon_name: Optional[str] = None
+    profile_image_url: Optional[str] = None
     since: datetime  # when friendship was accepted
 
     class Config:

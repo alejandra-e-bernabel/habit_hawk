@@ -22,6 +22,7 @@ export default function WeeklyProgressChart({
 }: WeeklyProgressChartProps) {
   // Find max value for scaling bars
   const maxCount = Math.max(...data.map((d) => d.count), 1);
+  const CHART_HEIGHT = 120; // Fixed height in pixels
 
   return (
     <View style={styles.container}>
@@ -35,6 +36,8 @@ export default function WeeklyProgressChart({
       <View style={styles.chartContainer}>
         {data.map((dayData, index) => {
           const heightPercent = dayData.isFuture ? 0 : (dayData.count / maxCount) * 100;
+          // Convert percentage to actual pixel height
+          const barHeight = dayData.isFuture ? 0 : Math.max((heightPercent / 100) * CHART_HEIGHT, 5);
           const barColor = dayData.isToday
             ? Colors.primary
             : dayData.isFuture
@@ -51,7 +54,7 @@ export default function WeeklyProgressChart({
                     style={[
                       styles.bar,
                       {
-                        height: `${Math.max(heightPercent, 5)}%`,
+                        height: barHeight,
                         backgroundColor: barColor,
                       },
                     ]}

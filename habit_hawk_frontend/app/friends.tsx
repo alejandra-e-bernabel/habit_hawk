@@ -15,6 +15,8 @@ import { Stack, router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { Colors } from "@/constants/Colors";
 import SegmentedControl from "@/components/SegmentedControl";
+import AvatarIcon from "@/components/AvatarIcon";
+import Toast, { ToastType } from "@/components/Toast";
 import useGetFriends from "@/hooks/social/useGetFriends";
 import useGetPendingRequests from "@/hooks/social/useGetPendingRequests";
 import useSendFriendRequest from "@/hooks/social/useSendFriendRequest";
@@ -26,6 +28,10 @@ type Tab = "friends" | "pending" | "add";
 export default function Friends() {
   const [selectedTab, setSelectedTab] = useState<Tab>("friends");
   const [friendUsername, setFriendUsername] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [toastVisible, setToastVisible] = useState(false);
+  const [toastMessage, setToastMessage] = useState("");
+  const [toastType, setToastType] = useState<ToastType>("success");
 
   // Hooks
   const {
@@ -42,9 +48,36 @@ export default function Friends() {
   } = useGetPendingRequests();
   const { sendRequest, loading: sendingRequest } = useSendFriendRequest();
   const { acceptRequest, loading: acceptingRequest } = useAcceptFriendRequest();
-  const { remove, loading: removingFriend } = useRemoveFriend();
+  const { removeFriend, loading: removingFriend } = useRemoveFriend();
 
   const [refreshing, setRefreshing] = useState(false);
+
+  // Helper to get display name
+  const getDisplayName = (firstName?: string, lastName?: string, username?: string) => {
+    if (firstName || lastName) {
+      return `${firstName || ''} ${lastName || ''}`.trim();
+    }
+    return username || '';
+  };
+
+  // Helper to show toast
+  const showToast = (message: string, type: ToastType) => {
+    setToastMessage(message);
+    setToastType(type);
+    setToastVisible(true);
+  };
+
+  // Filter friends based on search query
+  const filteredFriends = friends.filter((friend) => {
+    const displayName = getDisplayName(friend.first_name, friend.last_name, friend.username).toLowerCase();
+    return displayName.includes(searchQuery.toLowerCase());
+  });
+
+  // Filter pending requests based on search query
+  const filteredPendingRequests = pendingRequests.filter((request) => {
+    const username = request.requester.username.toLowerCase();
+    return username.includes(searchQuery.toLowerCase());
+  });
 
   const onRefresh = async () => {
     setRefreshing(true);
@@ -58,18 +91,18 @@ export default function Friends() {
 
   const handleSendRequest = async () => {
     if (!friendUsername.trim()) {
-      Alert.alert("Error", "Please enter a username");
+      showToast("Please enter a username", "error");
       return;
     }
 
     try {
       await sendRequest(friendUsername.trim());
-      Alert.alert("Success", `Friend request sent to ${friendUsername}`);
+      showToast(`Friend request sent to ${friendUsername}`, "success");
       setFriendUsername("");
     } catch (err) {
-      Alert.alert(
-        "Error",
-        err instanceof Error ? err.message : "Failed to send friend request"
+      showToast(
+        err instanceof Error ? err.message : "Failed to send friend request",
+        "error"
       );
     }
   };
@@ -77,28 +110,28 @@ export default function Friends() {
   const handleAcceptRequest = async (friendshipId: number, username: string) => {
     try {
       await acceptRequest(friendshipId);
-      Alert.alert("Success", `You are now friends with ${username}!`);
+      showToast(`You are now friends with ${username}!`, "success");
       refetchPending();
       refetchFriends();
     } catch (err) {
-      Alert.alert(
-        "Error",
-        err instanceof Error ? err.message : "Failed to accept friend request"
+      showToast(
+        err instanceof Error ? err.message : "Failed to accept friend request",
+        "error"
       );
     }
   };
 
   const handleRejectRequest = async (friendshipId: number, username: string) => {
     const confirmReject = () => {
-      remove(friendshipId)
+      removeFriend(friendshipId)
         .then(() => {
-          Alert.alert("Success", `Friend request from ${username} rejected`);
+          showToast(`Friend request from ${username} rejected`, "success");
           refetchPending();
         })
         .catch((err) => {
-          Alert.alert(
-            "Error",
-            err instanceof Error ? err.message : "Failed to reject request"
+          showToast(
+            err instanceof Error ? err.message : "Failed to reject request",
+            "error"
           );
         });
     };
@@ -121,15 +154,15 @@ export default function Friends() {
 
   const handleRemoveFriend = async (friendshipId: number, username: string) => {
     const confirmRemove = () => {
-      remove(friendshipId)
+      removeFriend(friendshipId)
         .then(() => {
-          Alert.alert("Success", `${username} removed from friends`);
+          showToast(`${username} removed from friends`, "success");
           refetchFriends();
         })
         .catch((err) => {
-          Alert.alert(
-            "Error",
-            err instanceof Error ? err.message : "Failed to remove friend"
+          showToast(
+            err instanceof Error ? err.message : "Failed to remove friend",
+            "error"
           );
         });
     };
@@ -180,6 +213,18 @@ export default function Friends() {
       );
     }
 
+    if (filteredFriends.length === 0 && searchQuery.trim()) {
+      return (
+        <View style={styles.centerContainer}>
+          <Ionicons name="search-outline" size={64} color={Colors.textTertiary} />
+          <Text style={styles.emptyTitle}>No Results</Text>
+          <Text style={styles.emptyText}>
+            No friends match "{searchQuery}"
+          </Text>
+        </View>
+      );
+    }
+
     return (
       <ScrollView
         style={styles.scrollView}
@@ -187,21 +232,28 @@ export default function Friends() {
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
       >
-        {friends.map((friend) => (
+        {filteredFriends.map((friend) => (
           <View key={friend.friendship_id} style={styles.friendItem}>
-            <View style={styles.friendAvatar}>
-              <Text style={styles.friendAvatarText}>
-                {friend.username.substring(0, 2).toUpperCase()}
-              </Text>
-            </View>
+            <AvatarIcon
+              firstName={friend.first_name}
+              lastName={friend.last_name}
+              username={friend.username}
+              profileIconName={friend.profile_icon_name}
+              profileImageUrl={friend.profile_image_url}
+              size={48}
+              borderColor={Colors.primary}
+              borderWidth={0}
+            />
             <View style={styles.friendInfo}>
-              <Text style={styles.friendName}>{friend.username}</Text>
+              <Text style={styles.friendName}>
+                {getDisplayName(friend.first_name, friend.last_name, friend.username)}
+              </Text>
               <Text style={styles.friendSince}>
                 Friends since {new Date(friend.since).toLocaleDateString()}
               </Text>
             </View>
             <TouchableOpacity
-              onPress={() => handleRemoveFriend(friend.friendship_id, friend.username)}
+              onPress={() => handleRemoveFriend(friend.friendship_id, getDisplayName(friend.first_name, friend.last_name, friend.username))}
               disabled={removingFriend}
               style={styles.removeButton}
             >
@@ -243,6 +295,18 @@ export default function Friends() {
       );
     }
 
+    if (filteredPendingRequests.length === 0 && searchQuery.trim()) {
+      return (
+        <View style={styles.centerContainer}>
+          <Ionicons name="search-outline" size={64} color={Colors.textTertiary} />
+          <Text style={styles.emptyTitle}>No Results</Text>
+          <Text style={styles.emptyText}>
+            No pending requests match "{searchQuery}"
+          </Text>
+        </View>
+      );
+    }
+
     return (
       <ScrollView
         style={styles.scrollView}
@@ -250,13 +314,14 @@ export default function Friends() {
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
       >
-        {pendingRequests.map((request) => (
+        {filteredPendingRequests.map((request) => (
           <View key={request.friendship_id} style={styles.requestItem}>
-            <View style={styles.friendAvatar}>
-              <Text style={styles.friendAvatarText}>
-                {request.requester.username.substring(0, 2).toUpperCase()}
-              </Text>
-            </View>
+            <AvatarIcon
+              username={request.requester.username}
+              size={48}
+              borderColor={Colors.primary}
+              borderWidth={0}
+            />
             <View style={styles.requestInfo}>
               <Text style={styles.requestName}>{request.requester.username}</Text>
               <Text style={styles.requestDate}>
@@ -345,15 +410,23 @@ export default function Friends() {
         options={{
           title: "Friends",
           presentation: "modal",
-          headerLeft: () => (
-            <TouchableOpacity onPress={() => router.back()}>
-              <Ionicons name="close-outline" size={28} color={Colors.primary} />
-            </TouchableOpacity>
-          ),
+          headerShown: false,
         }}
+      />
+      <Toast
+        message={toastMessage}
+        type={toastType}
+        visible={toastVisible}
+        onDismiss={() => setToastVisible(false)}
       />
       <View style={styles.container}>
         <View style={styles.header}>
+          <View style={styles.headerTop}>
+            <Text style={styles.headerTitle}>Friends</Text>
+            <TouchableOpacity onPress={() => router.back()} style={styles.closeButton}>
+              <Ionicons name="close-outline" size={28} color={Colors.primary} />
+            </TouchableOpacity>
+          </View>
           <SegmentedControl
             options={[
               { label: "Friends", value: "friends" as Tab },
@@ -364,8 +437,35 @@ export default function Friends() {
               { label: "Add Friend", value: "add" as Tab },
             ]}
             value={selectedTab}
-            onChange={setSelectedTab}
+            onChange={(tab) => {
+              setSelectedTab(tab);
+              setSearchQuery("");
+            }}
           />
+          {(selectedTab === "friends" || selectedTab === "pending") && (
+            <View style={styles.searchContainer}>
+              <Ionicons
+                name="search-outline"
+                size={20}
+                color={Colors.textSecondary}
+                style={styles.searchIcon}
+              />
+              <TextInput
+                style={styles.searchInput}
+                placeholder={`Search ${selectedTab === "friends" ? "friends" : "requests"}...`}
+                placeholderTextColor={Colors.textTertiary}
+                value={searchQuery}
+                onChangeText={setSearchQuery}
+                autoCapitalize="none"
+                autoCorrect={false}
+              />
+              {searchQuery.length > 0 && (
+                <TouchableOpacity onPress={() => setSearchQuery("")} style={styles.clearButton}>
+                  <Ionicons name="close-circle" size={20} color={Colors.textSecondary} />
+                </TouchableOpacity>
+              )}
+            </View>
+          )}
         </View>
 
         {selectedTab === "friends" && renderFriendsTab()}
@@ -383,9 +483,47 @@ const styles = StyleSheet.create({
   },
   header: {
     backgroundColor: Colors.card,
-    padding: 16,
+    paddingHorizontal: 16,
+    paddingTop: 16,
+    paddingBottom: 16,
     borderBottomWidth: 1,
     borderBottomColor: Colors.border,
+  },
+  headerTop: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: 16,
+  },
+  headerTitle: {
+    fontSize: 24,
+    fontWeight: "700",
+    color: Colors.textPrimary,
+  },
+  closeButton: {
+    padding: 4,
+  },
+  searchContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: Colors.background,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    paddingHorizontal: 12,
+    marginTop: 16,
+  },
+  searchIcon: {
+    marginRight: 8,
+  },
+  searchInput: {
+    flex: 1,
+    fontSize: 16,
+    color: Colors.textPrimary,
+    paddingVertical: 12,
+  },
+  clearButton: {
+    padding: 4,
   },
   scrollView: {
     flex: 1,
@@ -425,20 +563,6 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     borderWidth: 1,
     borderColor: Colors.border,
-  },
-  friendAvatar: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: Colors.primaryLightest,
-    justifyContent: "center",
-    alignItems: "center",
-    marginRight: 12,
-  },
-  friendAvatarText: {
-    fontSize: 18,
-    fontWeight: "600",
-    color: Colors.primary,
   },
   friendInfo: {
     flex: 1,

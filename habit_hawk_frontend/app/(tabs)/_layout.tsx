@@ -53,6 +53,7 @@ export default function TabLayout() {
         name="habits"
         options={{
           title: "Habits",
+          headerShown: false,
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="checkmark-circle-outline" size={size} color={color} />
           ),
@@ -62,6 +63,7 @@ export default function TabLayout() {
         name="leaderboard"
         options={{
           title: "Leaderboard",
+          headerShown: false,
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="trophy-outline" size={size} color={color} />
           ),

@@ -9,6 +9,7 @@ import {
   TextInput,
   TouchableOpacity,
   View,
+  Image,
 } from "react-native";
 import { Link } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -100,11 +101,11 @@ export default function Register() {
               edges={["top"]}
               style={styles.headerSafeArea}
             >
-              <View style={styles.logoCircle}>
-                <AppText weight="bold" style={styles.logoText}>
-                  Logo
-                </AppText>
-              </View>
+              <Image
+                source={require("@/assets/images/logo.png")}
+                style={styles.logoImage}
+                resizeMode="contain"
+              />
 
               <AppText weight="semiBold" style={styles.appName}>
                 Habit Hawk
@@ -347,17 +348,9 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingTop: 18,
   },
-  logoCircle: {
+  logoImage: {
     width: 96,
     height: 96,
-    borderRadius: 48,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: COLORS.logoBackground,
-  },
-  logoText: {
-    color: COLORS.heading,
-    fontSize: 16,
   },
   appName: {
     marginTop: 20,
